@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>DeciVote — Live Results</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Share+Tech+Mono&family=Exo+2:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg-deep:    #030712;
+    --bg-card:    #0d1117;
+    --bg-panel:   #111827;
+    --border:     #1e2d3d;
+    --border-glow:#00e5ff33;
+    --cyan:       #00e5ff;
+    --cyan-dim:   #00e5ff55;
+    --gold:       #f5c400;
+    --red:        #ff3b5c;
+    --green:      #00ff9d;
+    --purple:     #a855f7;
+    --orange:     #f97316;
+    --text-pri:   #e2e8f0;
+    --text-sec:   #64748b;
+    --text-dim:   #334155;
+    --font-head:  'Orbitron', sans-serif;
+    --font-mono:  'Share Tech Mono', monospace;
+    --font-body:  'Exo 2', sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--bg-deep);
+    color: var(--text-pri);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Rich background */
+  body::before {
+    content: '';
+    position: fixed; inset: 0; z-index: 0;
+    background:
+      radial-gradient(ellipse 1200px 600px at 50% -200px, #00e5ff06, transparent),
+      radial-gradient(ellipse 700px 400px at 0% 100%, #a855f706, transparent),
+      radial-gradient(ellipse 600px 400px at 100% 100%, #f5c40006, transparent);
+    pointer-events: none;
+  }
+  body::after {
+    content: '';
+    position: fixed; inset: 0; z-index: 0;
+    background-image:
+      linear-gradient(rgba(0,229,255,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,255,0.02) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+  }
+
+  /* NAV */
+  nav {
+    position: sticky; top: 0;
+    height: 64px; z-index: 100;
+    background: rgba(3,7,18,0.92);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 48px;
+  }
+  .nav-left { display: flex; align-items: center; gap: 12px; }
+  .nav-icon {
+    width: 34px; height: 34px; border-radius: 8px;
+    background: linear-gradient(135deg, var(--cyan), var(--purple));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; box-shadow: 0 0 16px var(--cyan-dim);
+  }
+  .nav-title { font-family: var(--font-head); font-size: 15px; font-weight: 700; letter-spacing: 3px; color: var(--cyan); }
+  .nav-sub { font-family: var(--font-mono); font-size: 10px; letter-spacing: 2px; color: var(--text-sec); margin-left: 8px; margin-top: 2px; }
+  .nav-right { display: flex; align-items: center; gap: 20px; }
+  .live-badge {
+    display: flex; align-items: center; gap: 8px;
+    background: #ff3b5c15; border: 1px solid #ff3b5c44;
+    padding: 6px 14px; border-radius: 20px;
+    font-family: var(--font-head); font-size: 10px; letter-spacing: 2px; color: var(--red);
+  }
+  .live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--red); box-shadow: 0 0 8px var(--red); animation: pulse 1s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.3} }
+  .chain-badge {
+    display: flex; align-items: center; gap: 8px;
+    font-family: var(--font-mono); font-size: 11px; color: var(--text-sec);
+  }
+  .chain-badge .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); animation: pulse 2s ease-in-out infinite; }
+  .last-update { font-family: var(--font-mono); font-size: 10px; color: var(--text-dim); }
+
+  /* ELECTION TABS */
+  .election-tabs {
+    position: sticky; top: 64px; z-index: 90;
+    background: rgba(13,17,23,0.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 48px;
+    display: flex; gap: 0;
+  }
+  .e-tab {
+    padding: 14px 24px;
+    cursor: pointer;
+    font-size: 13px; font-weight: 500;
+    color: var(--text-sec);
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    display: flex; align-items: center; gap: 8px;
+    white-space: nowrap;
+  }
+  .e-tab:hover { color: var(--text-pri); }
+  .e-tab.active { color: var(--cyan); border-bottom-color: var(--cyan); }
+  .e-tab .tab-status {
+    font-family: var(--font-mono); font-size: 9px; letter-spacing: 1px;
+    padding: 2px 7px; border-radius: 10px; font-weight: 600;
+  }
+  .ts-live { background: #ff3b5c15; color: var(--red); border: 1px solid #ff3b5c33; }
+  .ts-ended { background: #ffffff10; color: var(--text-sec); border: 1px solid var(--border); }
+
+  /* CONTENT */
+  .content { position: relative; z-index: 1; padding: 40px 48px 80px; max-width: 1280px; margin: 0 auto; }
+
+  /* Election panel */
+  .election-panel { display: none; }
+  .election-panel.active { display: block; }
+
+  /* Hero stats */
+  .hero-stats {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px;
+    margin-bottom: 36px;
+  }
+  .hero-stat {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px;
+    text-align: center; position: relative; overflow: hidden;
+    transition: all 0.2s;
+  }
+  .hero-stat:hover { border-color: var(--border-glow); }
+  .hero-stat::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: var(--acc, var(--cyan));
+  }
+  .hero-stat-icon { font-size: 22px; margin-bottom: 10px; }
+  .hero-stat-val { font-family: var(--font-head); font-size: 22px; font-weight: 700; color: var(--acc, var(--cyan)); line-height: 1; margin-bottom: 4px; }
+  .hero-stat-label { font-family: var(--font-mono); font-size: 9px; letter-spacing: 2px; color: var(--text-sec); text-transform: uppercase; }
+
+  /* Winner card */
+  .winner-section { margin-bottom: 36px; }
+  .winner-card {
+    background: linear-gradient(135deg, #0d1117 0%, #111827 50%, #0d1117 100%);
+    border: 1px solid var(--gold);
+    border-radius: 16px; padding: 32px;
+    position: relative; overflow: hidden;
+    display: flex; align-items: center; gap: 32px;
+  }
+  .winner-card::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, #f5c40006 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .winner-crown {
+    font-size: 48px;
+    filter: drop-shadow(0 0 16px var(--gold));
+    flex-shrink: 0;
+    animation: float 3s ease-in-out infinite;
+  }
+  @keyframes float { 0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)} }
+  .winner-ava {
+    width: 80px; height: 80px; border-radius: 16px;
+    background: var(--bg-deep);
+    border: 2px solid var(--gold);
+    font-size: 40px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 24px #f5c40033;
+    flex-shrink: 0;
+  }
+  .winner-info { flex: 1; }
+  .winner-tag { font-family: var(--font-mono); font-size: 10px; letter-spacing: 3px; color: var(--gold); text-transform: uppercase; margin-bottom: 8px; }
+  .winner-name { font-family: var(--font-head); font-size: 28px; font-weight: 900; color: var(--gold); margin-bottom: 4px; }
+  .winner-party { font-family: var(--font-mono); font-size: 12px; color: var(--text-sec); letter-spacing: 2px; margin-bottom: 16px; }
+  .winner-stats { display: flex; gap: 28px; }
+  .winner-stat-val { font-family: var(--font-head); font-size: 24px; font-weight: 700; color: var(--text-pri); line-height: 1; margin-bottom: 2px; }
+  .winner-stat-label { font-family: var(--font-mono); font-size: 9px; letter-spacing: 2px; color: var(--text-sec); }
+  .winner-badge {
+    flex-shrink: 0; text-align: center;
+    background: linear-gradient(135deg, #f5c400, #ff9500);
+    border-radius: 12px; padding: 16px 24px;
+    color: #000; font-family: var(--font-head);
+  }
+  .winner-badge-pct { font-size: 36px; font-weight: 900; line-height: 1; }
+  .winner-badge-label { font-size: 9px; letter-spacing: 2px; margin-top: 4px; }
+  .live-notice {
+    display: flex; align-items: center; gap: 8px;
+    background: #ff3b5c10; border: 1px solid #ff3b5c33;
+    border-radius: 8px; padding: 10px 16px;
+    font-family: var(--font-mono); font-size: 10px; color: var(--red);
+    margin-top: 12px; letter-spacing: 1px;
+  }
+
+  /* Main results grid */
+  .results-layout { display: grid; grid-template-columns: 1fr 380px; gap: 24px; margin-bottom: 28px; }
+
+  /* Bar chart results */
+  .results-chart { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 28px; }
+  .results-chart-title { font-family: var(--font-head); font-size: 12px; letter-spacing: 2px; color: var(--text-sec); text-transform: uppercase; margin-bottom: 24px; }
+  .bar-result {
+    display: flex; align-items: center; gap: 16px;
+    margin-bottom: 20px; cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .bar-result:hover { opacity: 0.85; }
+  .bar-candidate { width: 180px; flex-shrink: 0; }
+  .bar-name { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+  .bar-party { font-family: var(--font-mono); font-size: 9px; letter-spacing: 1px; color: var(--text-sec); }
+  .bar-track { flex: 1; height: 36px; background: var(--bg-panel); border-radius: 6px; overflow: hidden; position: relative; }
+  .bar-fill {
+    height: 100%; border-radius: 6px;
+    display: flex; align-items: center; padding-left: 12px;
+    font-family: var(--font-mono); font-size: 11px; color: #000; font-weight: 700;
+    transition: width 1.5s cubic-bezier(0.16, 1, 0.3, 1);
+    min-width: 2px;
+    position: relative;
+  }
+  .bar-fill::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent 70%, rgba(255,255,255,0.1));
+  }
+  .bar-stats { width: 120px; text-align: right; flex-shrink: 0; }
+  .bar-votes { font-family: var(--font-head); font-size: 16px; font-weight: 700; color: var(--text-pri); }
+  .bar-pct { font-family: var(--font-mono); font-size: 11px; color: var(--text-sec); }
+  .bar-rank {
+    width: 24px; height: 24px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-head); font-size: 10px; font-weight: 700;
+    flex-shrink: 0;
+  }
+  .rank-1 { background: var(--gold); color: #000; box-shadow: 0 0 12px #f5c40066; }
+  .rank-2 { background: #94a3b8; color: #000; }
+  .rank-3 { background: #b45309; color: #fff; }
+  .rank-n { background: var(--bg-panel); color: var(--text-sec); border: 1px solid var(--border); }
+
+  /* Pie / donut */
+  .donut-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 28px; }
+  .donut-title { font-family: var(--font-head); font-size: 12px; letter-spacing: 2px; color: var(--text-sec); text-transform: uppercase; margin-bottom: 20px; }
+  .donut-wrap { display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
+  .donut-legend { display: flex; flex-direction: column; gap: 8px; }
+  .donut-legend-item { display: flex; align-items: center; gap: 10px; font-size: 12px; }
+  .donut-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+  .donut-legend-name { flex: 1; font-weight: 500; font-size: 12px; }
+  .donut-legend-pct { font-family: var(--font-mono); font-size: 11px; color: var(--text-sec); }
+
+  /* Bottom section */
+  .bottom-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+
+  .info-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 24px; }
+  .info-card-title { font-family: var(--font-head); font-size: 11px; letter-spacing: 2px; color: var(--text-sec); text-transform: uppercase; margin-bottom: 16px; }
+
+  /* Turnout gauge */
+  .gauge-wrap { text-align: center; padding: 8px 0; }
+  .gauge-val { font-family: var(--font-head); font-size: 40px; font-weight: 900; color: var(--cyan); line-height: 1; }
+  .gauge-label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 2px; color: var(--text-sec); margin-bottom: 16px; margin-top: 4px; }
+  .gauge-bar { height: 12px; background: var(--border); border-radius: 6px; overflow: hidden; margin-bottom: 12px; }
+  .gauge-fill { height: 100%; border-radius: 6px; background: linear-gradient(90deg, var(--cyan), var(--purple)); }
+  .gauge-sub { display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 10px; color: var(--text-sec); }
+
+  /* Vote stream */
+  .vote-stream { max-height: 200px; overflow-y: auto; }
+  .stream-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 0; border-bottom: 1px solid #ffffff04;
+    font-size: 12px; animation: slideIn 0.4s ease;
+  }
+  @keyframes slideIn { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
+  .stream-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 6px var(--green); flex-shrink: 0; }
+  .stream-voter { font-family: var(--font-mono); font-size: 10px; color: var(--cyan-dim); }
+  .stream-time { font-family: var(--font-mono); font-size: 10px; color: var(--text-dim); margin-left: auto; }
+
+  /* Block trail */
+  .block-trail { display: flex; flex-direction: column; gap: 8px; }
+  .trail-block {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--bg-panel); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 12px;
+    cursor: pointer; transition: border-color 0.2s;
+  }
+  .trail-block:hover { border-color: var(--cyan-dim); }
+  .trail-block-num { font-family: var(--font-head); font-size: 11px; color: var(--cyan); width: 60px; flex-shrink: 0; }
+  .trail-hash { font-family: var(--font-mono); font-size: 10px; color: var(--text-dim); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .trail-votes { font-family: var(--font-mono); font-size: 10px; color: var(--text-sec); flex-shrink: 0; }
+
+  /* Verify section */
+  .verify-section {
+    margin-top: 24px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px; padding: 28px;
+  }
+  .verify-title { font-family: var(--font-head); font-size: 12px; letter-spacing: 2px; color: var(--text-sec); text-transform: uppercase; margin-bottom: 16px; }
+  .verify-row { display: flex; gap: 12px; }
+  .verify-input {
+    flex: 1; padding: 12px 16px;
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    border-radius: 10px; color: var(--text-pri);
+    font-family: var(--font-mono); font-size: 12px;
+    outline: none; transition: border-color 0.2s;
+  }
+  .verify-input:focus { border-color: var(--cyan); }
+  .verify-input::placeholder { color: var(--text-dim); }
+  .btn-verify {
+    padding: 12px 24px; border-radius: 10px;
+    background: var(--cyan); color: #000;
+    border: none; font-family: var(--font-head); font-size: 11px; font-weight: 700;
+    letter-spacing: 2px; cursor: pointer; transition: all 0.2s;
+    box-shadow: 0 0 16px var(--cyan-dim); white-space: nowrap;
+  }
+  .btn-verify:hover { background: #33eeff; }
+  .verify-result {
+    margin-top: 16px; padding: 16px;
+    background: var(--bg-panel); border: 1px solid var(--border);
+    border-radius: 10px; font-family: var(--font-mono); font-size: 11px;
+    color: var(--green); display: none;
+    line-height: 1.8;
+  }
+  .verify-result.show { display: block; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg-deep); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* Ended overlay */
+  .ended-notice {
+    display: flex; align-items: center; gap: 10px;
+    background: #f5c40010; border: 1px solid #f5c40033;
+    border-radius: 10px; padding: 14px 18px;
+    font-family: var(--font-mono); font-size: 11px; color: var(--gold);
+    margin-bottom: 28px; letter-spacing: 1px;
+  }
+
+  @media (max-width: 1100px) {
+    .results-layout { grid-template-columns: 1fr; }
+    .bottom-grid { grid-template-columns: 1fr 1fr; }
+    .hero-stats { grid-template-columns: repeat(3, 1fr); }
+  }
+  @media (max-width: 700px) {
+    nav, .election-tabs, .content { padding-left: 20px; padding-right: 20px; }
+    .hero-stats { grid-template-columns: repeat(2, 1fr); }
+    .bottom-grid { grid-template-columns: 1fr; }
+    .winner-card { flex-direction: column; text-align: center; }
+    .winner-stats { justify-content: center; }
+    .bar-candidate { width: 120px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Nav -->
+<nav>
+  <div class="nav-left">
+    <div class="nav-icon">⛓</div>
+    <div>
+      <div style="display:flex;align-items:baseline;gap:8px">
+        <div class="nav-title">DeciVote</div>
+        <div class="nav-sub">LIVE RESULTS</div>
+      </div>
+    </div>
+  </div>
+  <div class="nav-right">
+    <div class="last-update">Last updated: <span id="lastUpdate">just now</span></div>
+    <div class="chain-badge"><div class="dot"></div> Block <span id="navBlock" style="color:var(--cyan)">1,247</span></div>
+    <div class="live-badge"><div class="live-dot"></div> LIVE</div>
+  </div>
+</nav>
+
+<!-- Election Tabs -->
+<div class="election-tabs">
+  <div class="e-tab active" onclick="switchElection('general', this)">
+    General Election 2025
+    <span class="tab-status ts-live">● LIVE</span>
+  </div>
+  <div class="e-tab" onclick="switchElection('senate', this)">
+    Senate By-Election
+    <span class="tab-status ts-live">● LIVE</span>
+  </div>
+  <div class="e-tab" onclick="switchElection('referendum', this)">
+    Referendum Q1
+    <span class="tab-status ts-ended">ENDED</span>
+  </div>
+</div>
+
+<!-- CONTENT -->
+<div class="content">
+
+  <!-- GENERAL ELECTION PANEL -->
+  <div class="election-panel active" id="panel-general">
+    <div class="hero-stats">
+      <div class="hero-stat" style="--acc:var(--gold)">
+        <div class="hero-stat-icon">🏆</div>
+        <div class="hero-stat-val" id="gen-leader-pct">34.2%</div>
+        <div class="hero-stat-label">Leading Candidate</div>
+      </div>
+      <div class="hero-stat" style="--acc:var(--cyan)">
+        <div class="hero-stat-icon">🗳</div>
+        <div class="hero-stat-val" id="gen-total">5,821</div>
+        <div class="hero-stat-label">Votes Cast</div>
+      </div>
+      <div class="hero-stat" style="--acc:var(--green)">
+        <div class="hero-stat-icon">📊</div>
+        <div class="hero-stat-val">72.0%</div>
+        <div class="hero-stat-label">Voter Turnout</div>
+      </div>
+      <div class="hero-stat" style="--acc:var(--purple)">
+        <div class="hero-stat-icon">⛓</div>
+        <div class="hero-stat-val" id="gen-blocks">1,247</div>
+        <div class="hero-stat-label">Blocks Recorded</div>
+      </div>
+      <div class="hero-stat" style="--acc:var(--orange)">
+        <div class="hero-stat-icon">⏱</div>
+        <div class="hero-stat-val" id="gen-countdown">3D 14H</div>
+        <div class="hero-stat-label">Time Remaining</div>
+      </div>
+    </div>
+
+    <!-- Winner (leading) -->
+    <div class="winner-section">
+      <div class="winner-card">
+        <div class="winner-crown">👑</div>
+        <div class="winner-ava">🧑</div>
+        <div class="winner-info">
+          <div class="winner-tag">🏆 Currently Leading</div>
+          <div class="winner-name">Marcus Rivera</div>
+          <div class="winner-party">PROGRESSIVE PARTY · CANDIDATE #01</div>
+          <div class="winner-stats">
+            <div>
+              <div class="winner-stat-val" id="gen-lead-votes">1,991</div>
+              <div class="winner-stat-label">VOTES</div>
+            </div>
+            <div>
+              <div class="winner-stat-val">34.2%</div>
+              <div class="winner-stat-label">VOTE SHARE</div>
+            </div>
+            <div>
+              <div class="winner-stat-val" style="color:var(--green)">+312</div>
+              <div class="winner-stat-label">LEAD MARGIN</div>
+            </div>
+          </div>
+        </div>
+        <div class="winner-badge">
+          <div class="winner-badge-pct">34.2%</div>
+          <div class="winner-badge-label">LEADING</div>
+        </div>
+      </div>
+      <div class="live-notice">
+        <div class="live-dot"></div>
+        Results update in real-time as votes are confirmed on-chain. Final results will be certified after election closes on Apr 17, 2025.
+      </div>
+    </div>
+
+    <!-- Results layout -->
+    <div class="results-layout">
+      <!-- Bar chart -->
+      <div class="results-chart">
+        <div class="results-chart-title">Vote Distribution — All Candidates</div>
+
+        <div class="bar-result">
+          <div class="bar-rank rank-1">1</div>
+          <div class="bar-candidate"><div class="bar-name">Marcus Rivera</div><div class="bar-party">PROGRESSIVE PARTY</div></div>
+          <div class="bar-track">
+            <div class="bar-fill" id="gen-bar-0" style="width:0%;background:linear-gradient(90deg,var(--gold),#ff9500)">
+              <span id="gen-bar-label-0"></span>
+            </div>
+          </div>
+          <div class="bar-stats"><div class="bar-votes" id="gen-v0">1,991</div><div class="bar-pct" id="gen-p0">34.2%</div></div>
+        </div>
+
+        <div class="bar-result">
+          <div class="bar-rank rank-2">2</div>
+          <div class="bar-candidate"><div class="bar-name">Elena Voss</div><div class="bar-party">LIBERTY FRONT</div></div>
+          <div class="bar-track">
+            <div class="bar-fill" id="gen-bar-1" style="width:0%;background:linear-gradient(90deg,var(--cyan),var(--purple))">
+              <span id="gen-bar-label-1"></span>
+            </div>
+          </div>
+          <div class="bar-stats"><div class="bar-votes" id="gen-v1">1,679</div><div class="bar-pct" id="gen-p1">28.8%</div></div>
+        </div>
+
+        <div class="bar-result">
+          <div class="bar-rank rank-3">3</div>
+          <div class="bar-candidate"><div class="bar-name">James Okafor</div><div class="bar-party">NATIONAL ALLIANCE</div></div>
+          <div class="bar-track">
+            <div class="bar-fill" id="gen-bar-2" style="width:0%;background:linear-gradient(90deg,#b45309,#f97316)">
+              <span id="gen-bar-label-2"></span>
+            </div>
+          </div>
+          <div class="bar-stats"><div class="bar-votes" id="gen-v2">1,049</div><div class="bar-pct" id="gen-p2">18.0%</div></div>
+        </div>
+
+        <div class="bar-result">
+          <div class="bar-rank rank-n">4</div>
+          <div class="bar-candidate"><div class="bar-name">Sarah Chen</div><div class="bar-party">UNITY COALITION</div></div>
+          <div class="bar-track">
+            <div class="bar-fill" id="gen-bar-3" style="width:0%;background:linear-gradient(90deg,var(--purple),#ec4899)">
+              <span id="gen-bar-label-3"></span>
+            </div>
+          </div>
+          <div class="bar-stats"><div class="bar-votes" id="gen-v3">582</div><div class="bar-pct" id="gen-p3">10.0%</div></div>
+        </div>
+
+        <div class="bar-result">
+          <div class="bar-rank rank-n">5</div>
+          <div class="bar-candidate"><div class="bar-name">David Kim</div><div class="bar-party">GREEN FUTURE</div></div>
+          <div class="bar-track">
+            <div class="bar-fill" id="gen-bar-4" style="width:0%;background:linear-gradient(90deg,var(--green),#14b8a6)">
+              <span id="gen-bar-label-4"></span>
+            </div>
+          </div>
+          <div class="bar-stats"><div class="bar-votes" id="gen-v4">350</div><div class="bar-pct" id="gen-p4">6.0%</div></div>
+        </div>
+
+        <div class="bar-result">
+          <div class="bar-rank rank-n">6</div>
+          <div class="bar-candidate"><div class="bar-name">Robert Sanchez</div><div class="bar-party">DEMOCRATIC UNION</div></div>
+          <div class="bar-track">
+            <div class="bar-fill" id="gen-bar-5" style="width:0%;background:linear-gradient(90deg,var(--red),#fb7185)">
+              <span id="gen-bar-label-5"></span>
+            </div>
+          </div>
+          <div class="bar-stats"><div class="bar-votes" id="gen-v5">170</div><div class="bar-pct" id="gen-p5">3.0%</div></div>
+        </div>
+      </div>
+
+      <!-- Donut chart -->
+      <div class="donut-card">
+        <div class="donut-title">Vote Share Breakdown</div>
+        <div class="donut-wrap">
+          <svg width="200" height="200" viewBox="0 0 200 200" id="donutSvg">
+            <!-- Donut segments drawn by JS -->
+          </svg>
+        </div>
+        <div class="donut-legend" id="donutLegend"></div>
+      </div>
+    </div>
+
+    <!-- Bottom grid -->
+    <div class="bottom-grid">
+      <!-- Turnout -->
+      <div class="info-card">
+        <div class="info-card-title">Voter Turnout</div>
+        <div class="gauge-wrap">
+          <div class="gauge-val">72.0%</div>
+          <div class="gauge-label">OF ELIGIBLE VOTERS</div>
+          <div class="gauge-bar"><div class="gauge-fill" style="width:72%"></div></div>
+          <div class="gauge-sub"><span>0</span><span>8,081 / 12,408</span><span>100%</span></div>
+        </div>
+        <div style="margin-top:16px;display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:var(--text-sec)">Voted</span><span style="font-family:var(--font-mono);font-size:11px">8,081</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:var(--text-sec)">Not Voted</span><span style="font-family:var(--font-mono);font-size:11px">4,327</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:var(--text-sec)">Null Votes</span><span style="font-family:var(--font-mono);font-size:11px;color:var(--red)">0</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:var(--text-sec)">Eligible Voters</span><span style="font-family:var(--font-mono);font-size:11px">12,408</span></div>
+        </div>
+      </div>
+
+      <!-- Live vote stream -->
+      <div class="info-card">
+        <div class="info-card-title">Live Vote Stream</div>
+        <div class="vote-stream" id="voteStream">
+          <div class="stream-item"><div class="stream-dot"></div><div class="stream-voter">VTR-0029**</div><div>voted in General 2025</div><div class="stream-time">just now</div></div>
+          <div class="stream-item"><div class="stream-dot"></div><div class="stream-voter">VTR-0581**</div><div>voted in General 2025</div><div class="stream-time">12s ago</div></div>
+          <div class="stream-item"><div class="stream-dot"></div><div class="stream-voter">VTR-1144**</div><div>voted in General 2025</div><div class="stream-time">28s ago</div></div>
+          <div class="stream-item"><div class="stream-dot"></div><div class="stream-voter">VTR-7821**</div><div>voted in General 2025</div><div class="stream-time">41s ago</div></div>
+          <div class="stream-item"><div class="stream-dot"></div><div class="stream-voter">VTR-3305**</div><div>voted in General 2025</div><div class="stream-time">1m ago</div></div>
+        </div>
+      </div>
+
+      <!-- Block trail -->
+      <div class="info-card">
+        <div class="info-card-title">Recent Vote Blocks</div>
+        <div class="block-trail">
+          <div class="trail-block">
+            <div class="trail-block-num">#1247</div>
+            <div class="trail-hash">a4b5c6d7e8f9a0b1c2d3e4f5...</div>
+            <div class="trail-votes">84 votes</div>
+          </div>
+          <div class="trail-block">
+            <div class="trail-block-num">#1246</div>
+            <div class="trail-hash">f1a2b3c4d5e6f7a8b9c0d1e2...</div>
+            <div class="trail-votes">76 votes</div>
+          </div>
+          <div class="trail-block">
+            <div class="trail-block-num">#1245</div>
+            <div class="trail-hash">2c8d9e0f1a2b3c4d5e6f7a8b...</div>
+            <div class="trail-votes">102 votes</div>
+          </div>
+          <div class="trail-block">
+            <div class="trail-block-num">#1244</div>
+            <div class="trail-hash">9b0a1f2e3d4c5b6a7f8e9d0c...</div>
+            <div class="trail-votes">91 votes</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Verify -->
+    <div class="verify-section">
+      <div class="verify-title">Verify Your Vote on Blockchain</div>
+      <div class="verify-row">
+        <input class="verify-input" id="verifyInput" placeholder="Enter your Transaction Hash (e.g. 0xa4b5c6d7e8f9...)">
+        <button class="btn-verify" onclick="verifyVote()">🔍 VERIFY</button>
+      </div>
+      <div class="verify-result" id="verifyResult"></div>
+    </div>
+  </div>
+
+  <!-- SENATE PANEL -->
+  <div class="election-panel" id="panel-senate">
+    <div class="hero-stats">
+      <div class="hero-stat" style="--acc:var(--gold)"><div class="hero-stat-icon">🏆</div><div class="hero-stat-val">51.3%</div><div class="hero-stat-label">Leading</div></div>
+      <div class="hero-stat" style="--acc:var(--cyan)"><div class="hero-stat-icon">🗳</div><div class="hero-stat-val">2,104</div><div class="hero-stat-label">Votes Cast</div></div>
+      <div class="hero-stat" style="--acc:var(--green)"><div class="hero-stat-icon">📊</div><div class="hero-stat-val">48.0%</div><div class="hero-stat-label">Turnout</div></div>
+      <div class="hero-stat" style="--acc:var(--purple)"><div class="hero-stat-icon">⛓</div><div class="hero-stat-val">487</div><div class="hero-stat-label">Blocks</div></div>
+      <div class="hero-stat" style="--acc:var(--red)"><div class="hero-stat-icon">⏱</div><div class="hero-stat-val">1D 2H</div><div class="hero-stat-label">Remaining</div></div>
+    </div>
+    <div class="winner-section">
+      <div class="winner-card">
+        <div class="winner-crown">👑</div>
+        <div class="winner-ava">👩‍⚕️</div>
+        <div class="winner-info">
+          <div class="winner-tag">🏆 Currently Leading</div>
+          <div class="winner-name">Dr. Priya Nair</div>
+          <div class="winner-party">HEALTH FIRST · CANDIDATE #01</div>
+          <div class="winner-stats">
+            <div><div class="winner-stat-val">1,079</div><div class="winner-stat-label">VOTES</div></div>
+            <div><div class="winner-stat-val">51.3%</div><div class="winner-stat-label">SHARE</div></div>
+            <div><div class="winner-stat-val" style="color:var(--green)">+221</div><div class="winner-stat-label">MARGIN</div></div>
+          </div>
+        </div>
+        <div class="winner-badge"><div class="winner-badge-pct">51.3%</div><div class="winner-badge-label">LEADING</div></div>
+      </div>
+    </div>
+    <div class="results-chart" style="margin-bottom:24px">
+      <div class="results-chart-title">Vote Distribution — Senate By-Election</div>
+      <div class="bar-result"><div class="bar-rank rank-1">1</div><div class="bar-candidate"><div class="bar-name">Dr. Priya Nair</div><div class="bar-party">HEALTH FIRST</div></div><div class="bar-track"><div class="bar-fill" style="width:51.3%;background:linear-gradient(90deg,var(--gold),#ff9500)">1,079</div></div><div class="bar-stats"><div class="bar-votes">1,079</div><div class="bar-pct">51.3%</div></div></div>
+      <div class="bar-result"><div class="bar-rank rank-2">2</div><div class="bar-candidate"><div class="bar-name">Prof. Alan Ward</div><div class="bar-party">REFORM PARTY</div></div><div class="bar-track"><div class="bar-fill" style="width:40.9%;background:linear-gradient(90deg,var(--cyan),var(--purple))">858</div></div><div class="bar-stats"><div class="bar-votes">858</div><div class="bar-pct">40.8%</div></div></div>
+      <div class="bar-result"><div class="bar-rank rank-3">3</div><div class="bar-candidate"><div class="bar-name">Linda Torres</div><div class="bar-party">WORKERS FRONT</div></div><div class="bar-track"><div class="bar-fill" style="width:5.0%;background:linear-gradient(90deg,#b45309,#f97316)">105</div></div><div class="bar-stats"><div class="bar-votes">105</div><div class="bar-pct">5.0%</div></div></div>
+      <div class="bar-result"><div class="bar-rank rank-n">4</div><div class="bar-candidate"><div class="bar-name">Omar Hassan</div><div class="bar-party">INNOVATION 2025</div></div><div class="bar-track"><div class="bar-fill" style="width:2.9%;background:linear-gradient(90deg,var(--green),#14b8a6)">62</div></div><div class="bar-stats"><div class="bar-votes">62</div><div class="bar-pct">2.9%</div></div></div>
+    </div>
+    <div class="verify-section">
+      <div class="verify-title">Verify Your Vote</div>
+      <div class="verify-row"><input class="verify-input" placeholder="Enter your Transaction Hash..."><button class="btn-verify" onclick="verifyVote()">🔍 VERIFY</button></div>
+    </div>
+  </div>
+
+  <!-- REFERENDUM PANEL -->
+  <div class="election-panel" id="panel-referendum">
+    <div class="ended-notice">🏛 This election has ended. Final results are certified and immutably recorded on the blockchain.</div>
+    <div class="hero-stats">
+      <div class="hero-stat" style="--acc:var(--green)"><div class="hero-stat-icon">✅</div><div class="hero-stat-val">58.3%</div><div class="hero-stat-label">Final Result</div></div>
+      <div class="hero-stat" style="--acc:var(--cyan)"><div class="hero-stat-icon">🗳</div><div class="hero-stat-val">31,042</div><div class="hero-stat-label">Total Votes</div></div>
+      <div class="hero-stat" style="--acc:var(--gold)"><div class="hero-stat-icon">📊</div><div class="hero-stat-val">84.1%</div><div class="hero-stat-label">Turnout</div></div>
+      <div class="hero-stat" style="--acc:var(--purple)"><div class="hero-stat-icon">⛓</div><div class="hero-stat-val">7,841</div><div class="hero-stat-label">Blocks</div></div>
+      <div class="hero-stat" style="--acc:var(--text-sec)"><div class="hero-stat-icon">📅</div><div class="hero-stat-val" style="font-size:14px">Mar 15</div><div class="hero-stat-label">Ended</div></div>
+    </div>
+    <div class="winner-section">
+      <div class="winner-card" style="border-color:var(--green)">
+        <div style="font-size:48px;filter:drop-shadow(0 0 16px var(--green))">✅</div>
+        <div class="winner-ava" style="border-color:var(--green);box-shadow:0 0 24px #00ff9d33;font-size:28px">YES</div>
+        <div class="winner-info">
+          <div class="winner-tag" style="color:var(--green)">🏆 Referendum Passed</div>
+          <div class="winner-name" style="color:var(--green)">YES — Motion Passed</div>
+          <div class="winner-party">Constitutional Amendment Approved</div>
+          <div class="winner-stats">
+            <div><div class="winner-stat-val">18,097</div><div class="winner-stat-label">YES VOTES</div></div>
+            <div><div class="winner-stat-val">12,945</div><div class="winner-stat-label">NO VOTES</div></div>
+            <div><div class="winner-stat-val" style="color:var(--green)">58.3%</div><div class="winner-stat-label">FINAL</div></div>
+          </div>
+        </div>
+        <div class="winner-badge" style="background:linear-gradient(135deg,var(--green),#14b8a6)"><div class="winner-badge-pct">PASS</div><div class="winner-badge-label">CERTIFIED</div></div>
+      </div>
+    </div>
+    <div class="results-chart">
+      <div class="results-chart-title">Final Vote Count — Referendum Q1</div>
+      <div class="bar-result"><div class="bar-rank rank-1">✓</div><div class="bar-candidate"><div class="bar-name">YES — Approve Amendment</div><div class="bar-party">In Favor</div></div><div class="bar-track"><div class="bar-fill" style="width:58.3%;background:linear-gradient(90deg,var(--green),#14b8a6)">18,097</div></div><div class="bar-stats"><div class="bar-votes">18,097</div><div class="bar-pct">58.3%</div></div></div>
+      <div class="bar-result"><div class="bar-rank rank-2">✗</div><div class="bar-candidate"><div class="bar-name">NO — Reject Amendment</div><div class="bar-party">Against</div></div><div class="bar-track"><div class="bar-fill" style="width:41.7%;background:linear-gradient(90deg,var(--red),#fb7185)">12,945</div></div><div class="bar-stats"><div class="bar-votes">12,945</div><div class="bar-pct">41.7%</div></div></div>
+    </div>
+  </div>
+
+</div><!-- end content -->
+
+<script>
+  // Switch election tab
+  function switchElection(name, el) {
+    document.querySelectorAll('.e-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.election-panel').forEach(p => p.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('panel-' + name).classList.add('active');
+  }
+
+  // Animate bars on load
+  const barData = [34.2, 28.8, 18.0, 10.0, 6.0, 3.0];
+  const barColors = [
+    'linear-gradient(90deg,var(--gold),#ff9500)',
+    'linear-gradient(90deg,var(--cyan),var(--purple))',
+    'linear-gradient(90deg,#b45309,#f97316)',
+    'linear-gradient(90deg,var(--purple),#ec4899)',
+    'linear-gradient(90deg,var(--green),#14b8a6)',
+    'linear-gradient(90deg,var(--red),#fb7185)'
+  ];
+  setTimeout(() => {
+    barData.forEach((pct, i) => {
+      const bar = document.getElementById('gen-bar-' + i);
+      if (bar) {
+        bar.style.width = pct + '%';
+        bar.style.background = barColors[i];
+        if (pct > 8) bar.querySelector('span').textContent = pct + '%';
+      }
+    });
+    drawDonut();
+  }, 300);
+
+  // Donut chart
+  function drawDonut() {
+    const data = [
+      { label: 'Marcus Rivera',   pct: 34.2, color: '#f5c400' },
+      { label: 'Elena Voss',      pct: 28.8, color: '#00e5ff' },
+      { label: 'James Okafor',    pct: 18.0, color: '#f97316' },
+      { label: 'Sarah Chen',      pct: 10.0, color: '#a855f7' },
+      { label: 'David Kim',       pct:  6.0, color: '#00ff9d' },
+      { label: 'Robert Sanchez',  pct:  3.0, color: '#ff3b5c' },
+    ];
+    const svg = document.getElementById('donutSvg');
+    const cx = 100, cy = 100, r = 80, ir = 50;
+    let angle = -90;
+    let paths = '';
+    data.forEach(d => {
+      const sweep = d.pct / 100 * 360;
+      const start = angle * Math.PI / 180;
+      const end = (angle + sweep) * Math.PI / 180;
+      const x1 = cx + r * Math.cos(start), y1 = cy + r * Math.sin(start);
+      const x2 = cx + r * Math.cos(end),   y2 = cy + r * Math.sin(end);
+      const xi1 = cx + ir * Math.cos(start), yi1 = cy + ir * Math.sin(start);
+      const xi2 = cx + ir * Math.cos(end),   yi2 = cy + ir * Math.sin(end);
+      const large = sweep > 180 ? 1 : 0;
+      paths += `<path d="M ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2} L ${xi2} ${yi2} A ${ir} ${ir} 0 ${large} 0 ${xi1} ${yi1} Z" fill="${d.color}" opacity="0.9" style="transition:opacity 0.2s" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.9"/>`;
+      angle += sweep;
+    });
+    paths += `<circle cx="${cx}" cy="${cy}" r="40" fill="#0d1117"/>`;
+    paths += `<text x="${cx}" y="${cy-6}" text-anchor="middle" fill="#e2e8f0" font-family="Orbitron,sans-serif" font-size="14" font-weight="700">5,821</text>`;
+    paths += `<text x="${cx}" y="${cy+12}" text-anchor="middle" fill="#64748b" font-family="Share Tech Mono,monospace" font-size="9" letter-spacing="1">TOTAL</text>`;
+    svg.innerHTML = paths;
+
+    const legend = document.getElementById('donutLegend');
+    legend.innerHTML = data.map(d => `
+      <div class="donut-legend-item">
+        <div class="donut-dot" style="background:${d.color}"></div>
+        <div class="donut-legend-name">${d.label}</div>
+        <div class="donut-legend-pct">${d.pct}%</div>
+      </div>`).join('');
+  }
+
+  // Live vote stream simulation
+  const voterPrefixes = ['VTR-00', 'VTR-12', 'VTR-34', 'VTR-78', 'VTR-56'];
+  let voteCount = 5821;
+  let blockNum = 1247;
+
+  function addStreamItem() {
+    const stream = document.getElementById('voteStream');
+    if (!stream) return;
+    const prefix = voterPrefixes[Math.floor(Math.random() * voterPrefixes.length)];
+    const num = Math.floor(Math.random() * 9999).toString().padStart(4, '0');
+    const item = document.createElement('div');
+    item.className = 'stream-item';
+    item.innerHTML = `<div class="stream-dot"></div><div class="stream-voter">${prefix}${num.slice(0,2)}**</div><div>voted in General 2025</div><div class="stream-time">just now</div>`;
+    stream.insertBefore(item, stream.firstChild);
+    if (stream.children.length > 8) stream.removeChild(stream.lastChild);
+
+    // Update total
+    voteCount += Math.floor(Math.random() * 3) + 1;
+    const el = document.getElementById('gen-total');
+    if (el) el.textContent = voteCount.toLocaleString();
+  }
+
+  function updateBlocks() {
+    blockNum++;
+    document.getElementById('navBlock').textContent = blockNum.toLocaleString();
+    const el = document.getElementById('gen-blocks');
+    if (el) el.textContent = blockNum.toLocaleString();
+
+    // Update last updated
+    document.getElementById('lastUpdate').textContent = 'just now';
+  }
+
+  setInterval(addStreamItem, 3200);
+  setInterval(updateBlocks, 7000);
+
+  // Countdown
+  function updateCountdown() {
+    const end = new Date(); end.setDate(end.getDate() + 3); end.setHours(end.getHours() + 14);
+    const diff = end - new Date();
+    const d = Math.floor(diff / 86400000);
+    const h = Math.floor((diff % 86400000) / 3600000);
+    const el = document.getElementById('gen-countdown');
+    if (el) el.textContent = `${d}D ${h}H`;
+  }
+  updateCountdown();
+  setInterval(updateCountdown, 60000);
+
+  // Verify vote
+  function verifyVote() {
+    const input = document.getElementById('verifyInput');
+    const result = document.getElementById('verifyResult');
+    if (!input || !result) return;
+    const hash = input.value.trim();
+    if (!hash) { alert('Please enter a transaction hash'); return; }
+    result.innerHTML = `
+      ✓ VOTE VERIFIED ON BLOCKCHAIN
+      ─────────────────────────────────────
+      TX Hash:    ${hash.length > 12 ? hash : '0xa4b5c6d7e8f9a0b1c2d3...'}
+      Block:      #1,187
+      Election:   General Election 2025
+      Status:     CONFIRMED (60+ blocks)
+      Timestamp:  2025-04-14 09:22:41 UTC
+      Integrity:  ✓ VALID — No tampering detected
+      ─────────────────────────────────────
+      Your vote is permanently recorded and cannot be altered.`;
+    result.classList.add('show');
+  }
+</script>
+<script type="module" src="./js/results.js"></script>
+</body>
+</html>

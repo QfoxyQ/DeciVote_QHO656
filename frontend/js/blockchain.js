@@ -5,7 +5,7 @@ export let signer = null;
 export let contract = null;
 export let currentAccount = null;
 
-const contractAddress = "0x6BA00e3341d44723B0858653d42AAea315BCa632";
+const contractAddress = "0xC3B51C4e1F30CD002f3B8026559344de8AAcad9d";
 
 async function loadAbi() {
   const response = await fetch("/artifacts/contracts/DeciVote.sol/DeciVote.json");

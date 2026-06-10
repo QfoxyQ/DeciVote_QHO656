@@ -14,33 +14,41 @@ window.walletConnect = async function () {
     alert("MetaMask connected successfully");
   } catch (error) {
     console.error(error);
-    alert(error.message);
+    alert(error.shortMessage || error.message);
   }
 };
 
 window.castVote = async function () {
+  const overlay = document.getElementById("processingOverlay");
+
   try {
     if (!contract) {
       alert("Connect MetaMask first");
       return;
     }
 
-    if (!selectedCandidate || !selectedCandidate.candidateId) {
+    const selectedCard = document.querySelector(".vote-candidate-card.selected");
+
+    if (!selectedCard) {
       alert("Select a candidate first");
       return;
     }
 
-    const overlay = document.getElementById("processingOverlay");
+    const candidateId = Number(selectedCard.dataset.candidateId);
+    const electionId = 1;
+
     overlay.classList.add("show");
 
-    const tx = await contract.vote(1, selectedCandidate.candidateId);
+    const tx = await contract.vote(electionId, candidateId);
     const receipt = await tx.wait();
 
     overlay.classList.remove("show");
 
+    const electionName = document.getElementById("votingElectionName")?.textContent || "General Election 2026";
+
     document.getElementById("confirmTxHash").textContent = receipt.hash;
     document.getElementById("confirmBlock").textContent = "#" + receipt.blockNumber;
-    document.getElementById("confirmElection").textContent = elections[currentElection].name;
+    document.getElementById("confirmElection").textContent = electionName;
     document.getElementById("confirmTime").textContent =
       new Date().toISOString().replace("T", " ").slice(0, 19) + " UTC";
     document.getElementById("confirmVoter").textContent =
@@ -53,7 +61,7 @@ window.castVote = async function () {
     showPage("page-confirm");
   } catch (error) {
     console.error(error);
-    document.getElementById("processingOverlay").classList.remove("show");
+    overlay?.classList.remove("show");
     alert(error.shortMessage || error.message);
   }
 };

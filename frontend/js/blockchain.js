@@ -5,11 +5,16 @@ export let signer = null;
 export let contract = null;
 export let currentAccount = null;
 
-// Update this address after each new Ganache deployment
-const contractAddress = "0xC3B51C4e1F30CD002f3B8026559344de8AAcad9d";
+const contractAddress = "0x3400f961ABb30F79771190607c1887563C62302A";
 
 async function loadAbi() {
-  const response = await fetch("/artifacts/contracts/DeciVote.sol/DeciVote.json");
+  const response = await fetch("/contract-abi");
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`Could not load contract ABI: ${text}`);
+  }
+
   const artifact = await response.json();
   return artifact.abi;
 }

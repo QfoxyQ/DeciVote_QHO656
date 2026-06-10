@@ -3,7 +3,8 @@ import {
   createElection,
   getElection,
   getCandidates,
-  getResults
+  getResults,
+  contract
 } from "../services/blockchainService.js";
 
 const router = express.Router();
@@ -30,6 +31,21 @@ router.post("/", async (req, res) => {
     });
   } catch (error) {
     console.error("Create election error:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Get election count
+router.get("/count", async (req, res) => {
+  try {
+    const count = await contract.electionCount();
+
+    res.json({
+      success: true,
+      count: count.toString()
+    });
+  } catch (error) {
+    console.error("Get election count error:", error);
     res.status(500).json({ success: false, error: error.message });
   }
 });

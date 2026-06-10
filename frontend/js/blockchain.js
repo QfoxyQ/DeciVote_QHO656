@@ -5,6 +5,7 @@ export let signer = null;
 export let contract = null;
 export let currentAccount = null;
 
+// Update this address after each new Ganache deployment
 const contractAddress = "0xC3B51C4e1F30CD002f3B8026559344de8AAcad9d";
 
 async function loadAbi() {

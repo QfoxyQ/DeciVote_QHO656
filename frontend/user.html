@@ -1,933 +1,468 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>DeciVote — Cast Your Vote</title>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Share+Tech+Mono&family=Exo+2:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
-<style>
-  :root {
-    --bg-deep:    #030712;
-    --bg-card:    #0d1117;
-    --bg-panel:   #111827;
-    --border:     #1e2d3d;
-    --border-glow:#00e5ff33;
-    --cyan:       #00e5ff;
-    --cyan-dim:   #00e5ff66;
-    --gold:       #f5c400;
-    --red:        #ff3b5c;
-    --green:      #00ff9d;
-    --purple:     #a855f7;
-    --text-pri:   #e2e8f0;
-    --text-sec:   #64748b;
-    --text-dim:   #334155;
-    --font-head:  'Orbitron', sans-serif;
-    --font-mono:  'Share Tech Mono', monospace;
-    --font-body:  'Exo 2', sans-serif;
-  }
-
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    font-family: var(--font-body);
-    background: var(--bg-deep);
-    color: var(--text-pri);
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
-
-  /* Ambient glow */
-  body::before {
-    content: '';
-    position: fixed; inset: 0; z-index: 0;
-    background:
-      radial-gradient(ellipse 800px 500px at 50% -100px, #00e5ff08, transparent),
-      radial-gradient(ellipse 600px 400px at 100% 80%, #a855f708, transparent);
-    pointer-events: none;
-  }
-
-  body::after {
-    content: '';
-    position: fixed; inset: 0; z-index: 0;
-    background-image:
-      linear-gradient(rgba(0,229,255,0.025) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0,229,255,0.025) 1px, transparent 1px);
-    background-size: 50px 50px;
-    pointer-events: none;
-  }
-
-  /* NAV */
-  nav {
-    position: fixed; top: 0; left: 0; right: 0;
-    height: 64px; z-index: 100;
-    background: rgba(3,7,18,0.85);
-    backdrop-filter: blur(20px);
-    border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 0 40px;
-  }
-  .nav-logo { display: flex; align-items: center; gap: 12px; }
-  .nav-logo-icon {
-    width: 36px; height: 36px; border-radius: 8px;
-    background: linear-gradient(135deg, var(--cyan), var(--purple));
-    display: flex; align-items: center; justify-content: center;
-    font-size: 16px;
-    box-shadow: 0 0 20px var(--cyan-dim);
-  }
-  .nav-logo-text { font-family: var(--font-head); font-size: 16px; font-weight: 700; letter-spacing: 3px; color: var(--cyan); }
-  .nav-right { display: flex; align-items: center; gap: 16px; }
-  .nav-chain {
-    display: flex; align-items: center; gap: 8px;
-    font-family: var(--font-mono); font-size: 11px; color: var(--text-sec);
-  }
-  .nav-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); animation: pulse 2s ease-in-out infinite; }
-  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
-  .nav-voter-id {
-    font-family: var(--font-mono); font-size: 11px;
-    color: var(--cyan);
-    background: #00e5ff10;
-    border: 1px solid var(--border-glow);
-    padding: 6px 14px; border-radius: 20px;
-  }
-  .btn-logout {
-    padding: 8px 16px; border-radius: 8px;
-    background: transparent; color: var(--text-sec);
-    border: 1px solid var(--border);
-    cursor: pointer; font-family: var(--font-body);
-    font-size: 12px; font-weight: 500;
-    transition: all 0.2s;
-  }
-  .btn-logout:hover { border-color: var(--red); color: var(--red); }
-
-  /* PAGES */
-  .page { display: none; position: relative; z-index: 1; }
-  .page.active { display: block; }
-
-  /* ======================== LOGIN PAGE ======================== */
-  .login-page {
-    min-height: 100vh;
-    display: flex; align-items: center; justify-content: center;
-    padding: 80px 20px;
-  }
-  .login-container { width: 440px; max-width: 100%; }
-  .login-badge {
-    display: inline-flex; align-items: center; gap: 8px;
-    background: #00e5ff10; border: 1px solid var(--border-glow);
-    padding: 6px 14px; border-radius: 20px;
-    font-family: var(--font-mono); font-size: 10px; letter-spacing: 2px; color: var(--cyan);
-    margin-bottom: 32px;
-  }
-  .login-title {
-    font-family: var(--font-head);
-    font-size: 28px; font-weight: 900;
-    line-height: 1.15; margin-bottom: 8px;
-    background: linear-gradient(135deg, #fff 0%, var(--cyan) 60%);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  }
-  .login-sub { color: var(--text-sec); font-size: 14px; margin-bottom: 40px; line-height: 1.6; }
-
-  .login-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 16px; padding: 36px;
-    position: relative; overflow: hidden;
-  }
-  .login-card::before {
-    content: '';
-    position: absolute; top: 0; left: 0; right: 0; height: 2px;
-    background: linear-gradient(90deg, transparent, var(--cyan), transparent);
-  }
-  .form-group { margin-bottom: 20px; }
-  .form-label {
-    display: block;
-    font-family: var(--font-mono); font-size: 10px; letter-spacing: 2px;
-    color: var(--text-sec); text-transform: uppercase;
-    margin-bottom: 8px;
-  }
-  .form-input {
-    width: 100%; padding: 12px 16px;
-    background: var(--bg-deep);
-    border: 1px solid var(--border);
-    border-radius: 10px; color: var(--text-pri);
-    font-family: var(--font-body); font-size: 14px;
-    transition: all 0.2s; outline: none;
-  }
-  .form-input:focus { border-color: var(--cyan); box-shadow: 0 0 0 3px #00e5ff15; }
-  .form-input::placeholder { color: var(--text-dim); }
-
-  .btn-full {
-    width: 100%; padding: 14px;
-    border-radius: 10px; border: none;
-    background: var(--cyan); color: #000;
-    font-family: var(--font-head); font-size: 13px; font-weight: 700;
-    letter-spacing: 2px; cursor: pointer;
-    transition: all 0.3s;
-    box-shadow: 0 0 24px var(--cyan-dim);
-    display: flex; align-items: center; justify-content: center; gap: 8px;
-  }
-  .btn-full:hover { background: #33eeff; box-shadow: 0 0 40px var(--cyan); transform: translateY(-2px); }
-
-  .login-divider { display: flex; align-items: center; gap: 12px; margin: 20px 0; }
-  .login-divider span { font-size: 11px; color: var(--text-dim); white-space: nowrap; }
-  .login-divider::before, .login-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
-
-  .btn-wallet {
-    width: 100%; padding: 12px;
-    border-radius: 10px; border: 1px solid var(--border);
-    background: transparent; color: var(--text-pri);
-    font-family: var(--font-body); font-size: 13px; font-weight: 500;
-    cursor: pointer; transition: all 0.2s;
-    display: flex; align-items: center; justify-content: center; gap: 8px;
-  }
-  .btn-wallet:hover { border-color: var(--purple); color: var(--purple); background: #a855f710; }
-
-  .security-badges {
-    display: flex; gap: 12px; justify-content: center;
-    margin-top: 28px; flex-wrap: wrap;
-  }
-  .security-badge {
-    display: flex; align-items: center; gap: 6px;
-    font-family: var(--font-mono); font-size: 9px; letter-spacing: 1px;
-    color: var(--text-dim); text-transform: uppercase;
-  }
-  .security-badge span { color: var(--green); }
-
-  /* ======================== DASHBOARD PAGE ======================== */
-  .dashboard-page { padding: 100px 40px 60px; max-width: 1000px; margin: 0 auto; }
-
-  .welcome-bar {
-    display: flex; align-items: center; justify-content: space-between;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 12px; padding: 20px 24px;
-    margin-bottom: 28px;
-  }
-  .welcome-left { display: flex; align-items: center; gap: 16px; }
-  .voter-avatar {
-    width: 48px; height: 48px; border-radius: 12px;
-    background: linear-gradient(135deg, var(--cyan), var(--purple));
-    display: flex; align-items: center; justify-content: center;
-    font-size: 20px;
-    box-shadow: 0 0 20px var(--cyan-dim);
-  }
-  .welcome-name { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
-  .welcome-id { font-family: var(--font-mono); font-size: 11px; color: var(--cyan); }
-  .voter-stats { display: flex; gap: 24px; }
-  .voter-stat { text-align: center; }
-  .voter-stat-val { font-family: var(--font-head); font-size: 18px; color: var(--cyan); line-height: 1; }
-  .voter-stat-label { font-size: 10px; color: var(--text-sec); margin-top: 4px; font-family: var(--font-mono); letter-spacing: 1px; }
-
-  .section-title {
-    font-family: var(--font-head); font-size: 12px;
-    letter-spacing: 3px; color: var(--text-sec);
-    text-transform: uppercase; margin-bottom: 16px;
-    display: flex; align-items: center; gap: 12px;
-  }
-  .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
-
-  /* Election cards */
-  .election-list { display: flex; flex-direction: column; gap: 16px; margin-bottom: 36px; }
-  .election-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 14px; padding: 24px;
-    cursor: pointer; transition: all 0.3s;
-    position: relative; overflow: hidden;
-  }
-  .election-card::before {
-    content: '';
-    position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
-    background: var(--cyan);
-  }
-  .election-card:hover { border-color: var(--border-glow); transform: translateX(4px); box-shadow: 4px 0 24px #00e5ff0a; }
-  .election-card.voted::before { background: var(--green); }
-  .election-card.voted { opacity: 0.75; cursor: default; }
-  .election-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px; }
-  .election-title { font-size: 17px; font-weight: 700; margin-bottom: 4px; }
-  .election-type { font-family: var(--font-mono); font-size: 10px; letter-spacing: 2px; color: var(--cyan); }
-  .election-badge-row { display: flex; align-items: center; gap: 8px; }
-  .e-badge {
-    padding: 5px 12px; border-radius: 20px;
-    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
-    letter-spacing: 1px; text-transform: uppercase;
-  }
-  .e-badge-active { background: #00ff9d15; color: var(--green); border: 1px solid #00ff9d33; }
-  .e-badge-voted  { background: #00e5ff15; color: var(--cyan); border: 1px solid var(--border-glow); }
-  .e-badge-closed { background: #ffffff10; color: var(--text-sec); border: 1px solid var(--border); }
-  .election-meta { display: flex; gap: 24px; margin-bottom: 14px; }
-  .meta-item { font-size: 12px; color: var(--text-sec); }
-  .meta-item strong { color: var(--text-pri); }
-  .election-countdown {
-    font-family: var(--font-head); font-size: 13px;
-    color: var(--gold); letter-spacing: 2px;
-  }
-  .progress-bar { height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
-  .progress-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--cyan), var(--purple)); transition: width 1s ease; }
-  .progress-label { display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 10px; color: var(--text-sec); margin-top: 6px; }
-
-  .btn-vote {
-    padding: 10px 24px; border-radius: 8px; border: none;
-    background: var(--cyan); color: #000;
-    font-family: var(--font-head); font-size: 11px; font-weight: 700; letter-spacing: 2px;
-    cursor: pointer; transition: all 0.2s;
-    box-shadow: 0 0 16px var(--cyan-dim);
-    margin-top: 14px;
-  }
-  .btn-vote:hover { background: #33eeff; box-shadow: 0 0 24px var(--cyan); }
-
-  /* ======================== VOTING PAGE ======================== */
-  .voting-page { padding: 100px 40px 80px; max-width: 800px; margin: 0 auto; }
-  .vote-header { text-align: center; margin-bottom: 40px; }
-  .vote-election-name {
-    font-family: var(--font-head); font-size: 22px; font-weight: 900;
-    letter-spacing: 2px; margin-bottom: 10px;
-    background: linear-gradient(135deg, #fff, var(--cyan));
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  }
-  .vote-instructions {
-    font-size: 14px; color: var(--text-sec); margin-bottom: 8px;
-  }
-  .vote-security-note {
-    display: inline-flex; align-items: center; gap: 6px;
-    font-family: var(--font-mono); font-size: 10px; color: var(--green);
-    background: #00ff9d10; border: 1px solid #00ff9d22;
-    padding: 6px 14px; border-radius: 20px;
-  }
-
-  .candidates-grid { display: flex; flex-direction: column; gap: 12px; margin-bottom: 32px; }
-  .vote-candidate-card {
-    background: var(--bg-card);
-    border: 2px solid var(--border);
-    border-radius: 14px; padding: 20px 24px;
-    cursor: pointer; transition: all 0.25s;
-    display: flex; align-items: center; gap: 20px;
-    position: relative;
-  }
-  .vote-candidate-card:hover { border-color: var(--cyan-dim); background: #00e5ff05; }
-  .vote-candidate-card.selected {
-    border-color: var(--cyan);
-    background: #00e5ff0c;
-    box-shadow: 0 0 0 1px var(--cyan), 0 4px 24px #00e5ff18;
-  }
-  .vote-candidate-card.selected .radio-outer { border-color: var(--cyan); }
-  .vote-candidate-card.selected .radio-inner { display: block; }
-  .radio-outer {
-    width: 22px; height: 22px; border-radius: 50%;
-    border: 2px solid var(--border);
-    display: flex; align-items: center; justify-content: center;
-    transition: border-color 0.2s;
-    flex-shrink: 0;
-  }
-  .radio-inner {
-    width: 10px; height: 10px; border-radius: 50%;
-    background: var(--cyan);
-    display: none;
-    box-shadow: 0 0 8px var(--cyan);
-  }
-  .cand-ava {
-    width: 52px; height: 52px; border-radius: 12px;
-    font-size: 24px;
-    background: var(--bg-panel);
-    border: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-  }
-  .cand-info { flex: 1; }
-  .cand-name { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
-  .cand-party { font-family: var(--font-mono); font-size: 10px; letter-spacing: 2px; color: var(--cyan); margin-bottom: 6px; }
-  .cand-bio { font-size: 12px; color: var(--text-sec); line-height: 1.5; }
-  .cand-num {
-    font-family: var(--font-head); font-size: 24px; font-weight: 900;
-    color: var(--text-dim); flex-shrink: 0;
-    transition: color 0.2s;
-  }
-  .vote-candidate-card.selected .cand-num { color: var(--cyan); }
-  .selected-check {
-    position: absolute; top: 12px; right: 14px;
-    width: 24px; height: 24px; border-radius: 50%;
-    background: var(--cyan); color: #000;
-    font-size: 12px; font-weight: 900;
-    display: none; align-items: center; justify-content: center;
-  }
-  .vote-candidate-card.selected .selected-check { display: flex; }
-
-  .vote-action-box {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 14px; padding: 24px;
-    text-align: center;
-  }
-  .selected-preview {
-    font-family: var(--font-mono); font-size: 12px; color: var(--text-sec);
-    margin-bottom: 16px;
-  }
-  .selected-preview strong { color: var(--cyan); font-size: 14px; }
-  .btn-cast {
-    padding: 16px 48px;
-    border-radius: 10px; border: none;
-    background: var(--cyan); color: #000;
-    font-family: var(--font-head); font-size: 14px; font-weight: 900; letter-spacing: 3px;
-    cursor: pointer; transition: all 0.3s;
-    box-shadow: 0 0 32px var(--cyan-dim);
-    opacity: 0.4; pointer-events: none;
-  }
-  .btn-cast.ready { opacity: 1; pointer-events: all; }
-  .btn-cast.ready:hover { background: #33eeff; box-shadow: 0 0 48px var(--cyan); transform: translateY(-3px) scale(1.02); }
-  .btn-back {
-    padding: 12px 24px; border-radius: 10px;
-    background: transparent; color: var(--text-sec);
-    border: 1px solid var(--border);
-    font-family: var(--font-body); font-size: 13px;
-    cursor: pointer; transition: all 0.2s; margin-right: 12px;
-  }
-  .btn-back:hover { border-color: var(--text-sec); color: var(--text-pri); }
-
-  /* ======================== CONFIRM PAGE ======================== */
-  .confirm-page { padding: 100px 40px 80px; max-width: 600px; margin: 0 auto; text-align: center; }
-  .confirm-icon {
-    width: 80px; height: 80px; border-radius: 50%;
-    background: linear-gradient(135deg, var(--cyan), var(--purple));
-    margin: 0 auto 28px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 36px;
-    box-shadow: 0 0 40px var(--cyan-dim);
-    animation: iconPop 0.5s ease;
-  }
-  @keyframes iconPop { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-
-  .confirm-title {
-    font-family: var(--font-head); font-size: 13px; letter-spacing: 3px;
-    color: var(--text-sec); margin-bottom: 8px; text-transform: uppercase;
-  }
-  .confirm-heading {
-    font-family: var(--font-head); font-size: 28px; font-weight: 900; margin-bottom: 16px;
-    background: linear-gradient(135deg, #fff, var(--cyan));
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  }
-  .confirm-sub { color: var(--text-sec); font-size: 14px; line-height: 1.6; margin-bottom: 36px; }
-
-  .tx-receipt {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 14px; padding: 24px;
-    text-align: left; margin-bottom: 28px;
-    position: relative; overflow: hidden;
-  }
-  .tx-receipt::before {
-    content: '';
-    position: absolute; top: 0; left: 0; right: 0; height: 2px;
-    background: linear-gradient(90deg, var(--cyan), var(--purple));
-  }
-  .tx-label {
-    font-family: var(--font-head); font-size: 10px; letter-spacing: 3px;
-    color: var(--text-sec); text-transform: uppercase; margin-bottom: 16px;
-  }
-  .tx-row {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 8px 0; border-bottom: 1px solid #ffffff05;
-    font-size: 13px;
-  }
-  .tx-row:last-child { border-bottom: none; }
-  .tx-key { color: var(--text-sec); }
-  .tx-val { font-family: var(--font-mono); font-size: 11px; color: var(--text-pri); }
-  .tx-val.cyan { color: var(--cyan); }
-  .tx-val.green { color: var(--green); }
-
-  .confirm-actions { display: flex; gap: 12px; justify-content: center; }
-  .btn-verify {
-    padding: 12px 28px; border-radius: 10px;
-    background: transparent; color: var(--cyan);
-    border: 1px solid var(--border-glow);
-    font-family: var(--font-body); font-size: 13px; font-weight: 600;
-    cursor: pointer; transition: all 0.2s;
-  }
-  .btn-verify:hover { background: #00e5ff10; }
-  .btn-home-btn {
-    padding: 12px 28px; border-radius: 10px;
-    background: var(--cyan); color: #000;
-    border: none;
-    font-family: var(--font-head); font-size: 12px; font-weight: 700; letter-spacing: 2px;
-    cursor: pointer; transition: all 0.2s;
-    box-shadow: 0 0 20px var(--cyan-dim);
-  }
-  .btn-home-btn:hover { background: #33eeff; }
-
-  /* ======================== SPINNER ======================== */
-  .processing-overlay {
-    display: none;
-    position: fixed; inset: 0; z-index: 500;
-    background: #000000dd;
-    backdrop-filter: blur(12px);
-    align-items: center; justify-content: center;
-    flex-direction: column; gap: 24px;
-  }
-  .processing-overlay.show { display: flex; }
-  .spinner {
-    width: 64px; height: 64px;
-    border: 3px solid var(--border);
-    border-top-color: var(--cyan);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .processing-text {
-    font-family: var(--font-head); font-size: 13px; letter-spacing: 3px;
-    color: var(--cyan); text-transform: uppercase;
-  }
-  .processing-steps { font-family: var(--font-mono); font-size: 11px; color: var(--text-sec); text-align: center; }
-  .processing-step { margin-bottom: 4px; transition: color 0.3s; }
-  .processing-step.done { color: var(--green); }
-  .processing-step.current { color: var(--cyan); }
-
-  /* Scrollbar */
-  ::-webkit-scrollbar { width: 6px; }
-  ::-webkit-scrollbar-track { background: var(--bg-deep); }
-  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-
-  /* Alert */
-  .alert-info {
-    background: #00e5ff10; border: 1px solid var(--border-glow);
-    border-radius: 10px; padding: 14px 18px;
-    font-size: 13px; color: var(--cyan);
-    display: flex; gap: 10px; align-items: flex-start;
-    margin-bottom: 24px;
-  }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeciVote – Blockchain Voting System</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            background: linear-gradient(135deg, #0a0f1e 0%, #1a0033 50%, #0f0a1e 100%);
+            font-family: 'Orbitron', system-ui;
+            padding: 40px 20px;
+            color: #eee;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        /* Animated background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(0, 170, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(138, 43, 226, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            animation: bgShift 8s ease-in-out infinite;
+            z-index: -1;
+        }
+        
+        @keyframes bgShift {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+        
+        .container { 
+            max-width: 700px; 
+            margin: 0 auto; 
+            background: rgba(17, 24, 39, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 32px; 
+            padding: 28px;
+            border: 2px solid rgba(0, 170, 255, 0.3);
+            box-shadow: 
+                0 0 30px rgba(0, 170, 255, 0.2),
+                inset 0 0 30px rgba(0, 170, 255, 0.05);
+            animation: containerGlow 3s ease-in-out infinite;
+        }
+        
+        @keyframes containerGlow {
+            0%, 100% { box-shadow: 0 0 30px rgba(0, 170, 255, 0.2), inset 0 0 30px rgba(0, 170, 255, 0.05); }
+            50% { box-shadow: 0 0 40px rgba(0, 170, 255, 0.3), inset 0 0 30px rgba(0, 170, 255, 0.08); }
+        }
+        
+        h1, h2 { 
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            background: linear-gradient(135deg, #00ffff, #00aeff, #00ffff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 20px rgba(0, 170, 255, 0.5);
+            margin-bottom: 20px;
+            animation: titlePulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes titlePulse {
+            0%, 100% { filter: drop-shadow(0 0 10px rgba(0, 170, 255, 0.3)); }
+            50% { filter: drop-shadow(0 0 20px rgba(0, 170, 255, 0.6)); }
+        }
+        
+        .page { 
+            display: none;
+            animation: fadeIn 0.6s ease-out;
+        }
+        
+        .page.active { display: block; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        button { 
+            background: linear-gradient(135deg, #00aeff, #0088ff);
+            color: #000;
+            border: 2px solid rgba(0, 170, 255, 0.5);
+            padding: 12px 24px;
+            border-radius: 40px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 8px 0;
+            font-family: 'Orbitron', system-ui;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 15px rgba(0, 170, 255, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+            pointer-events: none;
+        }
+        
+        button:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+        
+        button:hover { 
+            box-shadow: 0 0 30px rgba(0, 170, 255, 0.6);
+            transform: translateY(-3px);
+        }
+        
+        button:active {
+            transform: translateY(-1px);
+            box-shadow: 0 0 40px rgba(0, 170, 255, 0.8);
+        }
+        
+        input { 
+            background: rgba(30, 42, 58, 0.8);
+            border: 2px solid rgba(0, 170, 255, 0.3);
+            padding: 12px 16px;
+            border-radius: 40px;
+            color: #00ff00;
+            width: 100%;
+            margin: 8px 0;
+            font-family: 'Orbitron', monospace;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 0 10px rgba(0, 170, 255, 0.1);
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: rgba(0, 170, 255, 0.8);
+            box-shadow: inset 0 0 10px rgba(0, 170, 255, 0.2), 0 0 20px rgba(0, 170, 255, 0.3);
+            color: #00ffff;
+        }
+        
+        input::placeholder { color: rgba(0, 170, 255, 0.5); }
+        
+        .election-card { 
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.6), rgba(30, 42, 58, 0.3));
+            border-radius: 20px; 
+            padding: 16px;
+            margin-bottom: 16px; 
+            border-left: 4px solid #00ffff;
+            border: 2px solid rgba(0, 170, 255, 0.2);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .election-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 170, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+        
+        .election-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 0 20px rgba(0, 170, 255, 0.3);
+            border-color: rgba(0, 170, 255, 0.5);
+        }
+        
+        .election-card:hover::before {
+            left: 100%;
+        }
+        
+        .candidate-card { 
+            background: linear-gradient(135deg, rgba(30, 42, 58, 0.6), rgba(15, 23, 42, 0.4));
+            border-radius: 16px; 
+            padding: 12px 16px;
+            margin-bottom: 10px; 
+            display: flex;
+            align-items: center; 
+            gap: 16px; 
+            cursor: pointer;
+            border: 2px solid rgba(0, 170, 255, 0.2);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .candidate-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent 30%, rgba(0, 170, 255, 0.1) 50%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+        
+        .candidate-card:hover {
+            transform: translateX(4px);
+            box-shadow: 0 0 15px rgba(0, 170, 255, 0.2);
+            border-color: rgba(0, 170, 255, 0.4);
+        }
+        
+        .candidate-card:hover::before {
+            opacity: 1;
+        }
+        
+        .candidate-card.selected { 
+            background: linear-gradient(135deg, rgba(0, 170, 255, 0.15), rgba(0, 170, 255, 0.05));
+            border: 2px solid #00ffff;
+            box-shadow: 0 0 20px rgba(0, 170, 255, 0.4), inset 0 0 15px rgba(0, 170, 255, 0.1);
+            animation: selectedPulse 1s ease-in-out infinite;
+        }
+        
+        @keyframes selectedPulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(0, 170, 255, 0.4), inset 0 0 15px rgba(0, 170, 255, 0.1); }
+            50% { box-shadow: 0 0 30px rgba(0, 170, 255, 0.6), inset 0 0 20px rgba(0, 170, 255, 0.15); }
+        }
+        
+        .radio { 
+            width: 22px; 
+            height: 22px; 
+            border-radius: 50%; 
+            border: 2px solid #00aeff;
+            display: inline-block; 
+            position: relative;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 10px rgba(0, 170, 255, 0.3);
+            flex-shrink: 0;
+        }
+        
+        .candidate-card.selected .radio {
+            border-color: #00ffff;
+            box-shadow: 0 0 15px rgba(0, 170, 255, 0.6);
+            animation: radioPulse 1.5s ease-in-out infinite;
+        }
+        
+        @keyframes radioPulse {
+            0%, 100% { box-shadow: 0 0 15px rgba(0, 170, 255, 0.6); }
+            50% { box-shadow: 0 0 25px rgba(0, 170, 255, 1); }
+        }
+        
+        .candidate-card.selected .radio::after { 
+            content: '';
+            width: 12px;
+            height: 12px;
+            background: #00ffff;
+            border-radius: 50%;
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            animation: radioBurst 0.5s ease-out;
+        }
+        
+        @keyframes radioBurst {
+            0% {
+                width: 0;
+                height: 0;
+                top: 10px;
+                left: 10px;
+                opacity: 1;
+            }
+            100% {
+                width: 12px;
+                height: 12px;
+                top: 4px;
+                left: 4px;
+                opacity: 1;
+            }
+        }
+        
+        .btn-cast {
+            opacity: 0.5;
+            cursor: pointer;
+            transition: opacity 0.3s ease;
+        }
+        
+        .btn-cast.ready {
+            opacity: 1;
+            cursor: pointer;
+            animation: castReady 0.5s ease-out;
+        }
+        
+        .btn-cast:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        @keyframes castReady {
+            0% { transform: scale(0.95); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        .tx-receipt { 
+            background: linear-gradient(135deg, rgba(10, 15, 30, 0.9), rgba(15, 23, 42, 0.8));
+            border-radius: 20px; 
+            padding: 16px;
+            margin: 16px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            border: 2px solid rgba(0, 255, 0, 0.3);
+            box-shadow: 
+                inset 0 0 20px rgba(0, 255, 0, 0.1),
+                0 0 20px rgba(0, 170, 255, 0.2);
+            color: #00ff00;
+            line-height: 1.8;
+            animation: terminalScroll 1s ease-out;
+        }
+        
+        @keyframes terminalScroll {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .tx-receipt div {
+            margin-bottom: 8px;
+            word-break: break-all;
+            animation: textReveal 0.5s ease-out forwards;
+        }
+        
+        .tx-receipt div:nth-child(1) { animation-delay: 0.1s; }
+        .tx-receipt div:nth-child(2) { animation-delay: 0.2s; }
+        .tx-receipt div:nth-child(3) { animation-delay: 0.3s; }
+        .tx-receipt div:nth-child(4) { animation-delay: 0.4s; }
+        .tx-receipt div:nth-child(5) { animation-delay: 0.5s; }
+        
+        @keyframes textReveal {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .loading, .error {
+            text-align: center;
+            padding: 20px;
+            border-radius: 16px;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+        
+        .loading {
+            color: #00aeff;
+            background: rgba(0, 170, 255, 0.1);
+            border: 2px solid rgba(0, 170, 255, 0.3);
+            animation: loadingPulse 1.5s ease-in-out infinite;
+        }
+        
+        @keyframes loadingPulse {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+        
+        .error {
+            color: #ff4444;
+            background: rgba(255, 68, 68, 0.1);
+            border: 2px solid rgba(255, 68, 68, 0.3);
+        }
+        
+        .flex { 
+            display: flex; 
+            gap: 12px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .flex button { flex: 1; min-width: 120px; }
+        
+        .status {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 40px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            margin-top: 8px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            border: 1px solid;
+            animation: statusGlow 2s ease-in-out infinite;
+        }
+        
+        .status.active {
+            background: rgba(0, 170, 255, 0.15);
+            color: #00ffff;
+            border-color: #00aeff;
+        }
+        
+        .status.voted {
+            background: rgba(0, 255, 100, 0.15);
+            color: #00ff64;
+            border-color: #00aa33;
+        }
+        
+        @keyframes statusGlow {
+            0%, 100% { filter: drop-shadow(0 0 5px currentColor); }
+            50% { filter: drop-shadow(0 0 10px currentColor); }
+        }
+    </style>
 </head>
 <body>
+<div class="container">
+    <!-- LOGIN PAGE -->
+    <div id="page-login" class="page active">
+        <h1>🗳️ DeciVote</h1>
+        <p style="margin-bottom: 20px; text-align: center; color: #00aeff; font-size: 0.9rem; letter-spacing: 1px;">SECURE BLOCKCHAIN VOTING SYSTEM</p>
+        <input type="text" id="voterId" placeholder="Enter your wallet address (0x...)">
+        <button id="connectWalletBtn">🦊 CONNECT METAMASK</button>
+        <button id="loginBtn">🔓 LOGIN & CONTINUE</button>
+    </div>
 
-<!-- Nav -->
-<nav>
-  <div class="nav-logo">
-    <div class="nav-logo-icon">⛓</div>
-    <div class="nav-logo-text">DeciVote</div>
-  </div>
-  <div class="nav-right">
-    <div class="nav-chain"><div class="nav-dot"></div> BLOCKCHAIN LIVE</div>
-    <div class="nav-voter-id" id="voterIdDisplay" style="display:none">VTR-000001</div>
-    <button class="btn-logout" id="logoutBtn" style="display:none" onclick="logout()">↩ Logout</button>
-  </div>
-</nav>
+    <!-- DASHBOARD PAGE -->
+    <div id="page-dashboard" class="page">
+        <h1>⚡ Welcome <span id="voterIdDisplay"></span></h1>
+        <button id="logoutBtn" style="margin-bottom: 20px; width: 100%;">🚪 LOGOUT</button>
+        <h2>📋 Active Elections</h2>
+        <div id="electionList"></div>
+    </div>
 
-<!-- Processing Overlay -->
-<div class="processing-overlay" id="processingOverlay">
-  <div class="spinner"></div>
-  <div class="processing-text">Processing Vote</div>
-  <div class="processing-steps">
-    <div class="processing-step" id="step1">Encrypting your ballot...</div>
-    <div class="processing-step" id="step2">Signing transaction...</div>
-    <div class="processing-step" id="step3">Broadcasting to network...</div>
-    <div class="processing-step" id="step4">Waiting for block confirmation...</div>
-  </div>
+    <!-- VOTING PAGE -->
+    <div id="page-voting" class="page">
+        <h2 id="votingElectionName">⚙️ Select Candidate</h2>
+        <div id="candidatesGrid" style="margin-bottom: 20px;"></div>
+        <div id="selectedPreview" style="margin-bottom: 16px; padding: 12px; border-radius: 12px; background: rgba(0, 170, 255, 0.1); border: 2px solid rgba(0, 170, 255, 0.3); color: #00ffff; font-size: 0.9rem; min-height: 40px; display: flex; align-items: center; justify-content: center; text-align: center;">No candidate selected</div>
+        <div class="flex">
+            <button id="backToDashboard">← BACK</button>
+            <button id="castBtn" class="btn-cast">🗳️ CAST VOTE</button>
+        </div>
+    </div>
+
+    <!-- CONFIRMATION PAGE -->
+    <div id="page-confirm" class="page">
+        <h1>✅ VOTE CONFIRMED!</h1>
+        <p style="text-align: center; margin-bottom: 20px; color: #00ff64;">Your vote has been permanently recorded on the blockchain.</p>
+        <div class="tx-receipt">
+            <div><strong>TX Hash:</strong> <span id="confirmTxHash"></span></div>
+            <div><strong>Block Height:</strong> <span id="confirmBlock"></span></div>
+            <div><strong>Election:</strong> <span id="confirmElection"></span></div>
+            <div><strong>Voter Address:</strong> <span id="confirmVoter"></span></div>
+            <div><strong>Timestamp:</strong> <span id="confirmTime"></span></div>
+        </div>
+        <button id="backToDashboardConfirm" style="width: 100%;">← BACK TO DASHBOARD</button>
+    </div>
 </div>
-
-<!-- PAGE: LOGIN -->
-<div class="page active" id="page-login">
-  <div class="login-page">
-    <div class="login-container">
-      <div class="login-badge"><div class="nav-dot"></div> BLOCKCHAIN SECURED VOTING</div>
-      <div class="login-title">CAST YOUR<br>VOTE SECURELY</div>
-      <div class="login-sub">Your vote is encrypted and recorded on an immutable blockchain. No one — not even system administrators — can alter your vote.</div>
-
-      <div class="login-card">
-        <div class="form-group">
-          <label class="form-label">Voter ID</label>
-          <input type="text" class="form-input" id="voterId" placeholder="e.g. VTR-000001" value="VTR-000001">
-        </div>
-        <div class="form-group">
-          <label class="form-label">National ID / Passport Number</label>
-          <input type="text" class="form-input" id="nationalId" placeholder="Enter your national ID" value="NID-123456">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Date of Birth</label>
-          <input type="date" class="form-input" id="dob" value="1990-05-15">
-        </div>
-        <button class="btn-full" onclick="doLogin()">
-          🔐 VERIFY IDENTITY & LOGIN
-        </button>
-
-        <div class="login-divider"><span>or connect with</span></div>
-        <button class="btn-wallet" onclick="walletConnect()">
-          🦊 Connect MetaMask Wallet
-        </button>
-      </div>
-
-      <div class="security-badges">
-        <div class="security-badge"><span>✓</span> AES-256 Encrypted</div>
-        <div class="security-badge"><span>✓</span> Zero-Knowledge Proof</div>
-        <div class="security-badge"><span>✓</span> Immutable Chain</div>
-        <div class="security-badge"><span>✓</span> Anonymous Ballot</div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- PAGE: DASHBOARD -->
-<div class="page" id="page-dashboard">
-  <div class="dashboard-page">
-    <div class="welcome-bar">
-      <div class="welcome-left">
-        <div class="voter-avatar">👤</div>
-        <div>
-          <div class="welcome-name">Alice Thompson</div>
-          <div class="welcome-id" id="dashVoterId">VTR-000001 · Verified Voter</div>
-        </div>
-      </div>
-      <div class="voter-stats">
-        <div class="voter-stat">
-          <div class="voter-stat-val">3</div>
-          <div class="voter-stat-label">Elections</div>
-        </div>
-        <div class="voter-stat">
-          <div class="voter-stat-val" style="color:var(--green)">1</div>
-          <div class="voter-stat-label">Voted</div>
-        </div>
-        <div class="voter-stat">
-          <div class="voter-stat-val" style="color:var(--gold)">2</div>
-          <div class="voter-stat-label">Pending</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="alert-info">
-      ℹ️ <span>You have <strong>2 active elections</strong> where your vote is pending. Cast your vote before the deadline — each vote is final and cannot be changed once submitted to the blockchain.</span>
-    </div>
-
-    <div class="section-title">ACTIVE ELECTIONS</div>
-    <div class="election-list">
-      <!-- Election 1 - not voted -->
-      <div class="election-card" onclick="openVoting('general')">
-        <div class="election-header">
-          <div>
-            <div class="election-title">General Election 2026</div>
-            <div class="election-type">PRESIDENTIAL ELECTION</div>
-          </div>
-          <div class="election-badge-row">
-            <span class="e-badge e-badge-active">● LIVE</span>
-            <div class="election-countdown" id="countdown1">3D 14H 22M</div>
-          </div>
-        </div>
-        <div class="election-meta">
-          <div class="meta-item">📍 <strong>National</strong></div>
-          <div class="meta-item">👤 <strong>2</strong> Candidates</div>
-          <div class="meta-item">🗳 <strong>5,821</strong> Votes Cast</div>
-          <div class="meta-item">📅 Ends <strong>Apr 17, 2026</strong></div>
-        </div>
-        <div class="progress-bar">
-          <div class="progress-fill" style="width:72%"></div>
-        </div>
-        <div class="progress-label"><span>Voter Turnout: 72%</span><span>8,081 / 12,408 eligible</span></div>
-        <button class="btn-vote" onclick="event.stopPropagation();openVoting('general')">CAST VOTE →</button>
-      </div>
-
-      <!--
-      Election 2 - not voted
-      <div class="election-card" onclick="openVoting('general')">
-        <div class="election-header">
-          <div>
-            <div class="election-title">Senate By-Election</div>
-            <div class="election-type">DISTRICT 4 SENATE</div>
-          </div>
-          <div class="election-badge-row">
-            <span class="e-badge e-badge-active">● LIVE</span>
-            <div class="election-countdown">1D 2H 15M</div>
-          </div>
-        </div>
-        <div class="election-meta">
-          <div class="meta-item">📍 <strong>District 4</strong></div>
-          <div class="meta-item">👤 <strong>2</strong> Candidates</div>
-          <div class="meta-item">🗳 <strong>2,104</strong> Votes Cast</div>
-          <div class="meta-item">📅 Ends <strong>Apr 15, 2025</strong></div>
-        </div>
-        <div class="progress-bar">
-          <div class="progress-fill" style="width:48%;background:linear-gradient(90deg,var(--gold),var(--red))"></div>
-        </div>
-        <div class="progress-label"><span>Voter Turnout: 48%</span><span>2,104 / 4,385 eligible</span></div>
-        <button class="btn-vote" onclick="event.stopPropagation();openVoting('general')" style="background:var(--gold);color:#000;box-shadow:0 0 16px #f5c40066">CAST VOTE →</button>
-      </div>
-      -->
-      
-      <!-- Election 3 - already voted -->
-      <div class="election-card voted">
-        <div class="election-header">
-          <div>
-            <div class="election-title">Referendum Q1</div>
-            <div class="election-type">CONSTITUTIONAL AMENDMENT</div>
-          </div>
-          <div class="election-badge-row">
-            <span class="e-badge e-badge-voted">✓ VOTED</span>
-          </div>
-        </div>
-        <div class="election-meta">
-          <div class="meta-item">📍 <strong>National</strong></div>
-          <div class="meta-item">🗳 <strong>31,042</strong> Votes Cast</div>
-          <div class="meta-item">📅 Ended <strong>Mar 15, 2025</strong></div>
-        </div>
-        <div style="font-family:var(--font-mono);font-size:11px;color:var(--text-sec);margin-top:8px">
-          Your vote was recorded at block <span style="color:var(--cyan)">#892</span> — TX: <span style="color:var(--cyan)">0x7f2a1b3c4d5e...</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="section-title">MY VOTE RECEIPTS</div>
-    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;overflow:hidden">
-      <table style="width:100%;border-collapse:collapse">
-        <thead>
-          <tr style="border-bottom:1px solid var(--border)">
-            <th style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;color:var(--text-sec);text-align:left;padding:12px 20px">ELECTION</th>
-            <th style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;color:var(--text-sec);text-align:left;padding:12px 20px">TX HASH</th>
-            <th style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;color:var(--text-sec);text-align:left;padding:12px 20px">BLOCK</th>
-            <th style="font-family:var(--font-mono);font-size:10px;letter-spacing:2px;color:var(--text-sec);text-align:left;padding:12px 20px">STATUS</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr id="receiptRow" style="display:none">
-            <td style="padding:14px 20px;font-size:13px;font-weight:600">General Election 2025</td>
-            <td style="padding:14px 20px;font-family:var(--font-mono);font-size:11px;color:var(--cyan)" id="receiptTxHash">—</td>
-            <td style="padding:14px 20px;font-family:var(--font-mono);font-size:11px;color:var(--cyan)" id="receiptBlock">—</td>
-            <td style="padding:14px 20px"><span style="background:#00ff9d15;color:var(--green);border:1px solid #00ff9d33;padding:4px 10px;border-radius:20px;font-family:var(--font-mono);font-size:10px">CONFIRMED</span></td>
-          </tr>
-          <tr>
-            <td style="padding:14px 20px;font-size:13px;font-weight:600">Referendum Q1</td>
-            <td style="padding:14px 20px;font-family:var(--font-mono);font-size:11px;color:var(--cyan)">0x7f2a1b3c4d5e...</td>
-            <td style="padding:14px 20px;font-family:var(--font-mono);font-size:11px;color:var(--cyan)">#892</td>
-            <td style="padding:14px 20px"><span style="background:#00ff9d15;color:var(--green);border:1px solid #00ff9d33;padding:4px 10px;border-radius:20px;font-family:var(--font-mono);font-size:10px">CONFIRMED</span></td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-</div>
-
-<!-- PAGE: VOTING -->
-<div class="page" id="page-voting">
-  <div class="voting-page">
-    <div class="vote-header">
-      <div class="vote-election-name" id="votingElectionName">GENERAL ELECTION 2025</div>
-      <div class="vote-instructions">Select one candidate. Your vote is encrypted before submission.</div>
-      <div class="vote-security-note">🔒 Zero-knowledge proof — your identity is hidden</div>
-    </div>
-
-    <div class="candidates-grid" id="candidatesGrid">
-      <!-- populated by JS -->
-    </div>
-
-    <div class="vote-action-box">
-      <div class="selected-preview" id="selectedPreview">No candidate selected yet</div>
-      <button class="btn-back" onclick="showPage('page-dashboard')">← Back</button>
-      <button class="btn-cast" id="castBtn" onclick="castVote()">CAST VOTE</button>
-    </div>
-  </div>
-</div>
-
-<!-- PAGE: CONFIRMATION -->
-<div class="page" id="page-confirm">
-  <div class="confirm-page">
-    <div class="confirm-icon">✅</div>
-    <div class="confirm-title">Vote Confirmed</div>
-    <div class="confirm-heading">Your Vote Is On-Chain</div>
-    <div class="confirm-sub">Your ballot has been encrypted, signed, and permanently recorded on the blockchain. It cannot be altered or deleted by anyone.</div>
-
-    <div class="tx-receipt">
-      <div class="tx-label">Transaction Receipt</div>
-      <div class="tx-row">
-        <span class="tx-key">Transaction Hash</span>
-        <span class="tx-val cyan" id="confirmTxHash">0xa4b5c6d7e8f9a0b1...</span>
-      </div>
-      <div class="tx-row">
-        <span class="tx-key">Block Number</span>
-        <span class="tx-val cyan" id="confirmBlock">#1,248</span>
-      </div>
-      <div class="tx-row">
-        <span class="tx-key">Voter ID</span>
-        <span class="tx-val" id="confirmVoter">VTR-000001</span>
-      </div>
-      <div class="tx-row">
-        <span class="tx-key">Election</span>
-        <span class="tx-val" id="confirmElection">General Election 2025</span>
-      </div>
-      <div class="tx-row">
-        <span class="tx-key">Timestamp</span>
-        <span class="tx-val" id="confirmTime">2025-04-14 14:44:07 UTC</span>
-      </div>
-      <div class="tx-row">
-        <span class="tx-key">Status</span>
-        <span class="tx-val green">✓ CONFIRMED (1 block)</span>
-      </div>
-    </div>
-
-    <div class="confirm-actions">
-      <button class="btn-verify" onclick="alert('Opening block explorer...')">🔍 Verify on Chain</button>
-      <button class="btn-home-btn" onclick="showPage('page-dashboard')">← Back to Dashboard</button>
-    </div>
-  </div>
-</div>
-
-<script>
-  const elections = {
-    general: {
-      name: 'GENERAL ELECTION 2025',
-      candidates: [
-        {
-          num: '01',
-          emoji: '🧑',
-          name: 'John Downy',
-          party: 'Rise Above&Beyond',
-          bio: 'Candidate registered on-chain.'
-        },
-        {
-          num: '02',
-          emoji: '👤',
-          name: 'Ron Gilbert',
-          party: 'SF - STUDENT FUTURE',
-          bio: 'Candidate registered on-chain.'
-        }
-      ]
-    }
-  };
-
-  let currentElection = null;
-  let selectedCandidate = null;
-
-  function showPage(id) {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
-  }
-
-  function doLogin() {
-    const vid = document.getElementById('voterId').value.trim();
-    if (!vid) return alert('Please enter your Voter ID');
-    document.getElementById('voterIdDisplay').textContent = vid;
-    document.getElementById('voterIdDisplay').style.display = 'flex';
-    document.getElementById('logoutBtn').style.display = 'block';
-    document.getElementById('dashVoterId').textContent = vid + ' · Verified Voter';
-    showPage('page-dashboard');
-  }
-
-  function logout() {
-    document.getElementById('voterIdDisplay').style.display = 'none';
-    document.getElementById('logoutBtn').style.display = 'none';
-    showPage('page-login');
-    selectedCandidate = null;
-  }
-
-  function openVoting(electionKey) {
-    currentElection = electionKey;
-    selectedCandidate = null;
-
-    const e = elections[electionKey];
-    if (!e) {
-      alert('Election data not found.');
-      return;
-    }
-
-    document.getElementById('votingElectionName').textContent = e.name;
-
-    const grid = document.getElementById('candidatesGrid');
-    grid.innerHTML = '';
-
-    e.candidates.forEach((c, i) => {
-      grid.innerHTML += `
-        <div class="vote-candidate-card"
-             id="card-${i}"
-             data-candidate-id="${i + 1}"
-             onclick="selectCandidate(${i}, '${c.name}', ${i + 1})">
-          <div class="radio-outer"><div class="radio-inner"></div></div>
-          <div class="cand-ava">${c.emoji}</div>
-          <div class="cand-info">
-            <div class="cand-name">${c.name}</div>
-            <div class="cand-party">${c.party}</div>
-            <div class="cand-bio">${c.bio}</div>
-          </div>
-          <div class="cand-num">${c.num}</div>
-          <div class="selected-check">✓</div>
-        </div>`;
-    });
-
-    document.getElementById('selectedPreview').textContent = 'No candidate selected yet';
-    document.getElementById('castBtn').classList.remove('ready');
-    showPage('page-voting');
-  }
-
-  function selectCandidate(idx, name, candidateId) {
-    document.querySelectorAll('.vote-candidate-card').forEach(c => c.classList.remove('selected'));
-    document.getElementById('card-' + idx).classList.add('selected');
-
-    selectedCandidate = {
-      name: name,
-      candidateId: candidateId
-    };
-
-    document.getElementById('selectedPreview').innerHTML = `Selected: <strong>${name}</strong>`;
-    document.getElementById('castBtn').classList.add('ready');
-  }
-
-  function castVote() {
-    if (!selectedCandidate) return;
-
-    const overlay = document.getElementById('processingOverlay');
-    overlay.classList.add('show');
-
-    const steps = ['step1','step2','step3','step4'];
-    let i = 0;
-
-    function nextStep() {
-      if (i > 0) document.getElementById(steps[i - 1]).classList.add('done');
-
-      if (i < steps.length) {
-        document.getElementById(steps[i]).classList.add('current');
-        i++;
-        setTimeout(nextStep, 900);
-      } else {
-        setTimeout(() => {
-          overlay.classList.remove('show');
-          steps.forEach(s => {
-            document.getElementById(s).className = 'processing-step';
-          });
-          finishVote();
-        }, 800);
-      }
-    }
-
-    nextStep();
-  }
-
-  function finishVote() {
-    const txHash = '0x' + Array.from({ length: 16 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
-    const blockNum = 1248 + Math.floor(Math.random() * 5);
-    const now = new Date().toISOString().replace('T', ' ').slice(0, 19) + ' UTC';
-    const eName = elections[currentElection].name;
-
-    document.getElementById('confirmTxHash').textContent = txHash.slice(0, 20) + '...';
-    document.getElementById('confirmBlock').textContent = '#' + blockNum.toLocaleString();
-    document.getElementById('confirmElection').textContent = eName;
-    document.getElementById('confirmTime').textContent = now;
-    document.getElementById('confirmVoter').textContent = document.getElementById('voterIdDisplay').textContent;
-
-    document.getElementById('receiptRow').style.display = 'table-row';
-    document.getElementById('receiptTxHash').textContent = txHash.slice(0, 20) + '...';
-    document.getElementById('receiptBlock').textContent = '#' + blockNum;
-
-    showPage('page-confirm');
-  }
-
-  function updateCountdown() {
-    const end = new Date();
-    end.setDate(end.getDate() + 3);
-    end.setHours(end.getHours() + 14);
-
-    const diff = end - new Date();
-    const d = Math.floor(diff / 86400000);
-    const h = Math.floor((diff % 86400000) / 3600000);
-    const m = Math.floor((diff % 3600000) / 60000);
-
-    const el = document.getElementById('countdown1');
-    if (el) el.textContent = `${d}D ${h}H ${m}M`;
-  }
-
-  updateCountdown();
-  setInterval(updateCountdown, 60000);
-</script>
 
 <script type="module" src="./js/user.js"></script>
 </body>

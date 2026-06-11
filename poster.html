@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DeciVote Poster – Corrected & Production Ready</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+:root {
+  --bg: #0a0f1e;
+  --card: rgba(13,21,40,0.96);
+  --blue: #00aeff;
+  --green: #00ff64;
+  --purple: #a855f7;
+  --text: #e8edf5;
+  --muted: #8899bb;
+  --border: rgba(0,174,255,0.28);
+  --glow: 0 0 18px rgba(0,174,255,0.12);
+  --card-glow: 0 8px 20px rgba(0,0,0,0.4), 0 0 0 1px rgba(0,174,255,0.1);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  width: 1587px;
+  height: 1123px;
+  overflow: hidden;
+  background: var(--bg);
+  font-family: 'Rajdhani', sans-serif;
+  color: var(--text);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.poster {
+  width: 1587px;
+  height: 1123px;
+  padding: 18px 20px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background:
+    radial-gradient(ellipse 55% 45% at 15% 10%, rgba(0,174,255,0.07) 0%, transparent 65%),
+    radial-gradient(ellipse 45% 40% at 85% 90%, rgba(0,255,100,0.05) 0%, transparent 60%),
+    var(--bg);
+}
+
+/* HEADER */
+.header {
+  display: grid;
+  grid-template-columns: 90px 1fr 90px;
+  align-items: center;
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: 18px;
+  padding: 8px 20px;
+  backdrop-filter: blur(2px);
+  box-shadow: var(--card-glow);
+  flex-shrink: 0;
+}
+
+.logo-box { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.logo-icon { font-size: 28px; filter: drop-shadow(0 0 6px #00aeff); }
+.logo-label { font-family: 'Orbitron', sans-serif; font-size: 6.8px; font-weight: 700; color: var(--blue); text-align: center; letter-spacing: 0.8px; line-height: 1.3; }
+
+.header-center { text-align: center; }
+.poster-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 28px;
+  font-weight: 900;
+  background: linear-gradient(135deg, #00aeff 0%, #3ae0ff 40%, #00ffaa 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  letter-spacing: 2.5px;
+  filter: drop-shadow(0 0 10px rgba(0,174,255,0.4));
+}
+.poster-subtitle { font-size: 10.2px; font-weight: 500; color: #c0dcff; margin-top: 5px; letter-spacing: 0.2px; }
+.poster-meta { font-size: 9.5px; color: var(--muted); margin-top: 4px; }
+.poster-meta span { color: var(--blue); font-weight: 600; }
+
+.eth-box { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.eth-icon { font-size: 28px; color: var(--purple); filter: drop-shadow(0 0 10px rgba(168,85,247,0.6)); }
+.eth-label { font-family: 'Orbitron', sans-serif; font-size: 6px; color: var(--purple); text-align: center; letter-spacing: 0.5px; }
+
+/* MAIN GRID */
+.main-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 10px;
+  flex: 1;
+  min-height: 0;
+}
+
+/* grid placements */
+.c1r1 { grid-column: 1; grid-row: 1; }
+.c2r1 { grid-column: 2; grid-row: 1; }
+.c3r1 { grid-column: 3; grid-row: 1; }
+.c4r1 { grid-column: 4; grid-row: 1; }
+.c1r2 { grid-column: 1 / span 2; grid-row: 2; }
+.c3r2 { grid-column: 3; grid-row: 2; }
+.c4r2 { grid-column: 4; grid-row: 2; }
+
+/* CARD */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 12px 14px;
+  box-shadow: var(--card-glow);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: all 0.1s ease;
+  backdrop-filter: blur(2px);
+  overflow-y: auto;
+}
+
+.card-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--blue);
+  text-shadow: 0 0 6px rgba(0,174,255,0.4);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid rgba(0,174,255,0.3);
+  padding-bottom: 6px;
+  flex-shrink: 0;
+}
+
+/* bullets & lists */
+.bullets { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.bullets li { padding-left: 14px; position: relative; font-size: 9.5px; line-height: 1.35; }
+.bullets li::before { content: '▸'; position: absolute; left: 0; color: var(--blue); font-size: 9px; }
+
+.callout-box {
+  background: linear-gradient(135deg, rgba(0,174,255,0.12), rgba(0,255,100,0.05));
+  border: 1px solid rgba(0,255,100,0.5);
+  border-radius: 10px;
+  padding: 8px 8px;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--green);
+  text-align: center;
+  margin-top: 4px;
+}
+.callout-box .src { font-size: 7.5px; color: var(--muted); font-weight: 400; display: block; margin-top: 4px; }
+
+.rq-block {
+  background: rgba(0,174,255,0.08);
+  border-left: 3px solid var(--blue);
+  border-radius: 8px;
+  padding: 7px 9px;
+  font-style: italic;
+  font-size: 9.2px;
+  color: #d4ecff;
+  line-height: 1.45;
+}
+.sub-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 8px;
+  font-weight: 700;
+  color: var(--green);
+  text-shadow: 0 0 6px rgba(0,255,100,0.3);
+  margin: 4px 0 2px 0;
+}
+.numbered { list-style: none; display: flex; flex-direction: column; gap: 5px; }
+.numbered li { display: flex; gap: 8px; font-size: 9px; align-items: flex-start; }
+.num-badge {
+  background: linear-gradient(135deg, var(--blue), #0088dd);
+  color: #fff;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 7px;
+  font-weight: 700;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* methodology table */
+.phase-table { width: 100%; border-collapse: collapse; font-size: 8.8px; }
+.phase-table thead tr th {
+  background: rgba(0,174,255,0.12);
+  color: var(--blue);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 8px;
+  font-weight: 700;
+  padding: 5px 5px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+.phase-table td { padding: 5px 5px; border-bottom: 1px solid rgba(0,174,255,0.1); }
+.phase-num { color: var(--blue); font-weight: 700; }
+.deliverable { color: var(--green); font-family: 'Share Tech Mono', monospace; font-size: 8px; }
+.testing-row {
+  background: rgba(0,255,100,0.07);
+  border: 1px solid rgba(0,255,100,0.25);
+  border-radius: 8px;
+  padding: 6px 8px;
+  font-size: 8.5px;
+  margin-top: 4px;
+}
+.ethical-badge {
+  background: rgba(168,85,247,0.12);
+  border: 1px solid rgba(168,85,247,0.4);
+  border-radius: 8px;
+  padding: 5px 8px;
+  font-size: 8px;
+  text-align: center;
+  color: #d4aaff;
+}
+
+/* architecture card */
+.arch-card { border-color: rgba(168,85,247,0.5); }
+.arch-wrap { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.arch-svg-wrap { background: #040814; border-radius: 12px; padding: 6px; border: 1px solid rgba(168,85,247,0.3); flex: 1; }
+.arch-caption { font-size: 7.5px; color: var(--muted); text-align: center; margin-top: 5px; font-style: italic; }
+
+/* results grid */
+.results-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 6px; }
+.metric-card {
+  background: linear-gradient(135deg, rgba(0,174,255,0.1), rgba(0,0,0,0.2));
+  border: 1px solid rgba(0,174,255,0.4);
+  border-radius: 12px;
+  padding: 6px 5px;
+  text-align: center;
+}
+.metric-val { font-family: 'Orbitron', sans-serif; font-size: 18px; font-weight: 900; color: var(--blue); text-shadow: 0 0 12px rgba(0,174,255,0.5); line-height: 1; }
+.metric-val.green { color: var(--green); text-shadow: 0 0 8px rgba(0,255,100,0.5); }
+.metric-label { font-size: 7.8px; color: var(--muted); margin-top: 4px; letter-spacing: 0.2px; }
+
+.uat-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.uat-label { font-size: 8.5px; width: 140px; flex-shrink: 0; }
+.uat-bar-bg { flex: 1; height: 8px; background: rgba(255,255,255,0.08); border-radius: 6px; overflow: hidden; }
+.uat-bar { height: 100%; border-radius: 6px; background: linear-gradient(90deg, var(--blue), var(--green)); }
+.uat-score { font-family: 'Share Tech Mono', monospace; font-size: 9px; color: var(--green); width: 32px; text-align: right; }
+
+.check-item { display: flex; gap: 6px; font-size: 8.8px; background: rgba(0,255,100,0.05); border-radius: 6px; padding: 5px 8px; border-left: 2px solid var(--green); margin-bottom: 5px; align-items: center; }
+.tick { color: var(--green); font-weight: bold; font-size: 10px; }
+
+/* screenshot area - fixed with embedded SVG mockups */
+.ss-outer { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 9px; min-height: 0; }
+.ss-box {
+  background: #050b14;
+  border: 1.5px solid rgba(0,174,255,0.4);
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+.ss-img { width: 100%; height: 100%; object-fit: cover; display: block; background: #001122; }
+.ss-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(transparent, rgba(0,0,0,0.85));
+  padding: 6px 8px;
+}
+.ss-title-ov { font-family: 'Orbitron', sans-serif; font-size: 8px; color: var(--blue); font-weight: 700; }
+.ss-tag { display: inline-block; background: rgba(0,255,100,0.2); border: 1px solid rgba(0,255,100,0.5); border-radius: 4px; padding: 1px 6px; font-size: 7px; color: var(--green); margin-top: 3px; }
+
+/* conclusions */
+.conc-bullets { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.conc-bullets li { padding-left: 12px; position: relative; font-size: 9px; }
+.conc-bullets li::before { content: '◆'; position: absolute; left: 0; color: var(--green); font-size: 7px; top: 1px; }
+
+.limit-box { background: rgba(255,100,30,0.08); border: 1px solid rgba(255,120,60,0.35); border-radius: 9px; padding: 6px 9px; margin: 6px 0 4px; }
+.limit-title { font-family: 'Orbitron', sans-serif; font-size: 7.5px; color: #ffaa66; font-weight: 700; margin-bottom: 3px; }
+.limit-items { font-size: 8.5px; color: #f0cfb0; }
+
+.reco-list { list-style: none; display: flex; flex-direction: column; gap: 5px; }
+.reco-list li { display: flex; gap: 8px; font-size: 8.8px; align-items: center; }
+.reco-num {
+  background: linear-gradient(135deg, var(--green), #00bb55);
+  color: #000;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 7px;
+  font-weight: 800;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* footer */
+.footer {
+  display: grid;
+  grid-template-columns: 1.2fr 0.9fr 1fr;
+  gap: 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 8px 16px;
+  align-items: center;
+  flex-shrink: 0;
+  backdrop-filter: blur(2px);
+}
+.footer-refs-title { font-family: 'Orbitron', sans-serif; font-size: 8px; color: var(--blue); font-weight: 700; margin-bottom: 4px; }
+.ref-item { font-size: 7.5px; color: var(--muted); line-height: 1.45; margin-bottom: 4px; }
+.ref-item em { color: #c0d4ff; font-style: italic; }
+.doi { color: var(--blue); font-family: 'Share Tech Mono', monospace; font-size: 6.8px; }
+
+.qr-area { display: flex; align-items: center; gap: 10px; justify-content: flex-start; }
+.qr-placeholder {
+  width: 48px; height: 48px;
+  background: rgba(0,174,255,0.05);
+  border: 1px dashed var(--blue);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 6px;
+  color: var(--muted);
+  text-align: center;
+  gap: 3px;
+}
+.qr-label { font-size: 7.5px; color: var(--muted); max-width: 130px; line-height: 1.4; }
+.contact-area { text-align: right; }
+.contact-title { font-family: 'Orbitron', sans-serif; font-size: 8px; color: var(--green); margin-bottom: 4px; }
+.contact-line { font-size: 8px; color: var(--muted); margin-bottom: 3px; display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
+.contact-line i { color: var(--blue); width: 16px; }
+.module-badge { background: rgba(0,174,255,0.1); border: 1px solid rgba(0,174,255,0.4); border-radius: 6px; padding: 2px 8px; font-size: 7px; display: inline-block; margin-top: 4px; font-family: 'Share Tech Mono', monospace; }
+
+/* scroll customization */
+.card::-webkit-scrollbar { width: 4px; }
+.card::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 4px; }
+.card::-webkit-scrollbar-thumb { background: var(--blue); border-radius: 4px; }
+</style>
+</head>
+<body>
+<div class="poster">
+
+<header class="header">
+  <div class="logo-box">
+    <div class="logo-icon">🏛️</div>
+    <div class="logo-label">SOUTHAMPTON<br>SOLENT<br>UNIVERSITY</div>
+  </div>
+  <div class="header-center">
+    <div class="poster-title">DeciVote</div>
+    <div class="poster-subtitle">Transparent, Tamper‑Proof, and User‑Friendly Electronic Voting &nbsp;•&nbsp; A Blockchain‑Based Decentralised Voting System Using Ethereum Smart Contracts</div>
+    <div class="poster-meta">
+      <span>Alex Rivera</span> &nbsp;|&nbsp; BSc (Hons) Computing &nbsp;|&nbsp; Southampton Solent University &nbsp;|&nbsp; Module: <span>QHO634</span>
+    </div>
+  </div>
+  <div class="eth-box">
+    <div class="eth-icon"><i class="fa-brands fa-ethereum"></i></div>
+    <div class="eth-label">ETHEREUM<br>SMART<br>CONTRACT</div>
+  </div>
+</header>
+
+<div class="main-grid">
+
+  <!-- C1R1: Problem & Motivation -->
+  <div class="card c1r1">
+    <div class="card-title"><span>🗳️</span> Problem &amp; Motivation</div>
+    <ul class="bullets">
+      <li>Traditional voting systems are vulnerable to fraud, manipulation, and lack meaningful transparency for ordinary citizens.</li>
+      <li>Centralised e‑voting machines present a single point of failure — hackable and independently unverifiable.</li>
+      <li>Voters have no mechanism to confirm their vote was correctly recorded after casting.</li>
+      <li>Blockchain's immutability, decentralisation, and public auditability make it an ideal substrate for electoral systems.</li>
+    </ul>
+    <div class="callout-box">
+      <i class="fa-solid fa-chart-line"></i> &nbsp;<strong>81%</strong> of citizens worry about election integrity
+      <span class="src">Pew Research Center, 2020</span>
+    </div>
+  </div>
+
+  <!-- C2R1: Research Question & Objectives -->
+  <div class="card c2r1">
+    <div class="card-title"><span>🎯</span> Research Question</div>
+    <div class="rq-block">"To what extent can an Ethereum‑based smart contract system provide secure, transparent, and usable voting while maintaining voter privacy and scalability?"</div>
+    <div class="sub-title" style="margin-top:5px"><i class="fa-solid fa-list-ol" style="color:var(--green);margin-right:5px"></i>OBJECTIVES</div>
+    <ol class="numbered">
+      <li><div class="num-badge">1</div><span>Develop a Solidity smart contract for election lifecycle management.</span></li>
+      <li><div class="num-badge">2</div><span>Build a Node.js/Express backend with RESTful API.</span></li>
+      <li><div class="num-badge">3</div><span>Create admin panel and voter interface with MetaMask integration.</span></li>
+      <li><div class="num-badge">4</div><span>Implement batch candidate addition and real‑time result display.</span></li>
+      <li><div class="num-badge">5</div><span>Test functional and non‑functional requirements.</span></li>
+      <li><div class="num-badge">6</div><span>Evaluate system against defined success criteria.</span></li>
+    </ol>
+  </div>
+
+  <!-- C3R1: Methodology -->
+  <div class="card c3r1">
+    <div class="card-title"><span>⚙️</span> Methodology – Agile Iterative</div>
+    <table class="phase-table">
+      <thead><tr><th>Phase</th><th>Duration</th><th>Deliverable</th></tr></thead>
+      <tbody>
+        <tr><td><span class="phase-num">1.</span> Smart Contract</td><td>2 wks</td><td><span class="deliverable">DeciVote.sol</span></td></tr>
+        <tr><td><span class="phase-num">2.</span> Backend API</td><td>2 wks</td><td><span class="deliverable">Express + ethers.js</span></td></tr>
+        <tr><td><span class="phase-num">3.</span> Frontend UI</td><td>3 wks</td><td><span class="deliverable">Admin + Voter + Results</span></td></tr>
+        <tr><td><span class="phase-num">4.</span> Testing &amp; Refinement</td><td>1 wk</td><td><span class="deliverable">100% pass rate</span></td></tr>
+      </tbody>
+    </table>
+    <div class="testing-row"><strong>Testing:</strong> Unit tests (Hardhat) · Integration tests · End‑to‑end functional (5 scenarios) · UAT (n=5 participants)</div>
+    <div class="ethical-badge"><i class="fa-solid fa-shield-halved"></i> &nbsp;Ethical approval obtained — Appendix B</div>
+  </div>
+
+  <!-- C4R1: System Architecture (SVG refined) -->
+  <div class="card c4r1 arch-card">
+    <div class="card-title" style="color:#c084fc;"><i class="fa-solid fa-diagram-project"></i> System Architecture</div>
+    <div class="arch-wrap">
+      <div class="arch-svg-wrap">
+        <svg viewBox="0 0 430 300" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%; display:block;">
+          <defs>
+            <marker id="arr" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><polygon points="0 0, 6 3, 0 6" fill="#00aeff"/></marker>
+            <marker id="arrg" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><polygon points="0 0, 6 3, 0 6" fill="#00ff64"/></marker>
+            <marker id="arrp" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><polygon points="0 0, 6 3, 0 6" fill="#c084fc"/></marker>
+            <filter id="glow-b"><feGaussianBlur stdDeviation="1.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+          </defs>
+          <rect x="8" y="18" width="414" height="98" rx="8" fill="rgba(0,60,100,0.3)" stroke="#00aeff" stroke-width="1" stroke-dasharray="4,3"/>
+          <text x="16" y="30" font-family="Orbitron" font-size="7" fill="#00aeff">FRONTEND LAYER</text>
+          <rect x="18" y="38" width="80" height="36" rx="5" fill="rgba(0,100,150,0.5)" stroke="#00aeff" stroke-width="1" filter="url(#glow-b)"/>
+          <text x="58" y="53" font-family="Rajdhani" font-size="8.5" fill="#00aeff" text-anchor="middle" font-weight="bold">admin.html</text>
+          <rect x="112" y="38" width="80" height="36" rx="5" fill="rgba(0,100,150,0.5)" stroke="#00aeff" stroke-width="1"/>
+          <text x="152" y="53" font-family="Rajdhani" font-size="8.5" fill="#00aeff" text-anchor="middle" font-weight="bold">user.html</text>
+          <rect x="206" y="38" width="80" height="36" rx="5" fill="rgba(0,100,150,0.5)" stroke="#00aeff" stroke-width="1"/>
+          <text x="246" y="53" font-family="Rajdhani" font-size="8.5" fill="#00aeff" text-anchor="middle" font-weight="bold">results.html</text>
+          <rect x="305" y="38" width="105" height="36" rx="5" fill="rgba(168,85,247,0.2)" stroke="#c084fc" stroke-width="1.2"/>
+          <text x="357" y="53" font-family="Rajdhani" font-size="9" fill="#c084fc" text-anchor="middle">🦊 MetaMask</text>
+          <rect x="55" y="84" width="250" height="26" rx="5" fill="rgba(0,30,60,0.7)" stroke="#00aeff" stroke-width="0.8"/>
+          <text x="180" y="100" font-family="Share Tech Mono" font-size="8" fill="#88ddff" text-anchor="middle">blockchain.js (ethers.js / web3 provider)</text>
+          <line x1="58" y1="74" x2="140" y2="84" stroke="#00aeff" stroke-width="1" marker-end="url(#arr)" opacity="0.7"/>
+          <line x1="152" y1="74" x2="170" y2="84" stroke="#00aeff" stroke-width="1" marker-end="url(#arr)" opacity="0.7"/>
+          <line x1="246" y1="74" x2="220" y2="84" stroke="#00aeff" stroke-width="1" marker-end="url(#arr)" opacity="0.7"/>
+          <line x1="330" y1="74" x2="300" y2="84" stroke="#c084fc" stroke-width="1" stroke-dasharray="3,2" marker-end="url(#arrp)"/>
+          <rect x="16" y="126" width="398" height="68" rx="8" fill="rgba(0,80,40,0.3)" stroke="#00ff64" stroke-width="1" stroke-dasharray="4,3"/>
+          <text x="24" y="138" font-family="Orbitron" font-size="7" fill="#00ff64">BACKEND LAYER (Node.js/Express)</text>
+          <rect x="28" y="145" width="110" height="40" rx="5" fill="rgba(0,80,40,0.6)" stroke="#00ff64" stroke-width="1"/><text x="83" y="160" font-family="Share Tech Mono" font-size="8" fill="#00ff64" text-anchor="middle">adminRoutes</text>
+          <rect x="152" y="145" width="115" height="40" rx="5" fill="rgba(0,80,40,0.6)" stroke="#00ff64" stroke-width="1"/><text x="209" y="160" font-family="Share Tech Mono" font-size="8" fill="#00ff64" text-anchor="middle">electionRoutes</text>
+          <rect x="280" y="145" width="125" height="40" rx="5" fill="rgba(0,70,40,0.7)" stroke="#66ffaa" stroke-width="1"/><text x="342" y="160" font-family="Share Tech Mono" font-size="8" fill="#aaffdd" text-anchor="middle">blockchainService</text>
+          <line x1="138" y1="165" x2="152" y2="165" stroke="#00ff64" stroke-width="1.2"/>
+          <line x1="267" y1="165" x2="280" y2="165" stroke="#00ff64" stroke-width="1.2"/>
+          <text x="207" y="212" font-family="Rajdhani" font-size="7.5" fill="#c084fc" text-anchor="middle">JSON-RPC · eth_sendTransaction / eth_call</text>
+          <line x1="210" y1="210" x2="210" y2="228" stroke="#c084fc" stroke-width="1.5" marker-end="url(#arrp)"/>
+          <rect x="10" y="232" width="410" height="62" rx="8" fill="rgba(100,0,140,0.28)" stroke="#c084fc" stroke-width="1" stroke-dasharray="4,3"/>
+          <text x="18" y="244" font-family="Orbitron" font-size="7" fill="#c084fc">⛓ BLOCKCHAIN LAYER (Ganache / Sepolia)</text>
+          <rect x="90" y="248" width="250" height="38" rx="6" fill="rgba(168,85,247,0.25)" stroke="#c084fc" stroke-width="1.8"/>
+          <text x="215" y="263" font-family="Share Tech Mono" font-size="10" fill="#d4aaff" text-anchor="middle" font-weight="bold">📜 DeciVote.sol</text>
+          <text x="215" y="277" font-family="Rajdhani" font-size="7.5" fill="#bb99ee" text-anchor="middle">Solidity · On‑Chain State · Events</text>
+        </svg>
+      </div>
+      <div class="arch-caption">Figure 1: Three‑tier decentralised architecture (Frontend ↔ Backend ↔ Ethereum Blockchain)</div>
+    </div>
+  </div>
+
+  <!-- C1R2: Results & Achievements (span two cols) -->
+  <div class="card c1r2">
+    <div class="card-title"><span>📊</span> Results &amp; Achievements</div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; flex:1;">
+      <div>
+        <div class="results-grid">
+          <div class="metric-card"><div class="metric-val green">100%</div><div class="metric-label">Functional Tests<br>27/27 passed</div></div>
+          <div class="metric-card"><div class="metric-val">~14s</div><div class="metric-label">Avg Vote Confirm<br>Ganache latency</div></div>
+          <div class="metric-card"><div class="metric-val green">&lt;1.8s</div><div class="metric-label">Page Load Time</div></div>
+          <div class="metric-card"><div class="metric-val">&lt;120ms</div><div class="metric-label">API Response Time</div></div>
+        </div>
+        <div class="sub-title" style="margin:8px 0 5px 0"><i class="fa-solid fa-users"></i> User Acceptance Testing (n=5)</div>
+        <div class="uat-row"><div class="uat-label">MetaMask connection ease</div><div class="uat-bar-bg"><div class="uat-bar" style="width:84%"></div></div><div class="uat-score">4.2/5</div></div>
+        <div class="uat-row"><div class="uat-label">Candidate selection clarity</div><div class="uat-bar-bg"><div class="uat-bar" style="width:96%"></div></div><div class="uat-score">4.8/5</div></div>
+        <div class="uat-row"><div class="uat-label">Overall satisfaction</div><div class="uat-bar-bg"><div class="uat-bar" style="width:90%"></div></div><div class="uat-score">4.5/5</div></div>
+      </div>
+      <div>
+        <div class="sub-title" style="margin-bottom:6px;"><i class="fa-solid fa-check-double"></i> Success Criteria</div>
+        <div class="check-item"><span class="tick">✅</span><span>Admin election creation &amp; batch candidate addition</span></div>
+        <div class="check-item"><span class="tick">✅</span><span>Voter authorisation &amp; double‑voting prevention</span></div>
+        <div class="check-item"><span class="tick">✅</span><span>Real‑time results with percentage bars</span></div>
+        <div class="check-item"><span class="tick">✅</span><span>MetaMask transaction signing &amp; receipt display</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- C3R2: Screenshots (corrected embedded SVG based mockups) -->
+  <div class="card c3r2">
+    <div class="card-title"><i class="fa-solid fa-display"></i> System Screenshots</div>
+    <div class="ss-outer">
+      <div class="ss-box">
+        <img class="ss-img" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 360 220'%3E%3Crect width='360' height='220' fill='%23071a2b'/%3E%3Crect x='15' y='12' width='330' height='28' rx='6' fill='%2311345e'/%3E%3Ctext x='180' y='31' font-family='monospace' font-size='10' fill='%2300aeff' text-anchor='middle' font-weight='bold'%3E⚙️ DeciVote Admin Panel%3C/text%3E%3Crect x='15' y='50' width='160' height='36' rx='5' fill='%230d2b45'/%3E%3Ctext x='95' y='72' fill='%23b0e0ff' font-size='9' text-anchor='middle'%3EBatch Candidates%3C/text%3E%3Crect x='185' y='50' width='160' height='36' rx='5' fill='%23144d2e'/%3E%3Ctext x='265' y='72' fill='%2300ff88' font-size='9' text-anchor='middle'%3E+ Create Election%3C/text%3E%3Ctext x='30' y='115' fill='%2388aacc' font-size='8'%3ECandidate List: Alice · Bob · Carol%3C/text%3E%3Ctext x='30' y='140' fill='%2388aacc' font-size='8'%3ETransaction Status: ✅ Deployed%3C/text%3E%3C/svg%3E" alt="Admin Panel Mockup">
+        <div class="ss-overlay"><div class="ss-title-ov">Admin Panel – Batch Candidate Mgmt</div><span class="ss-tag">↗ Smart contract integration</span></div>
+      </div>
+      <div class="ss-box">
+        <img class="ss-img" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 360 220'%3E%3Crect width='360' height='220' fill='%23071a2b'/%3E%3Crect x='15' y='12' width='330' height='28' rx='6' fill='%231d3a1a'/%3E%3Ctext x='180' y='31' font-family='monospace' font-size='10' fill='%2300ff64' text-anchor='middle'%3E✅ VOTE CONFIRMED%3C/text%3E%3Ctext x='30' y='75' fill='%23bbddff' font-size='8.5'%3ETransaction Hash:%3C/text%3E%3Ctext x='30' y='92' font-family='monospace' fill='%2388aaff' font-size='8'%3E0x71fa...c9e3b6a%3C/text%3E%3Ctext x='30' y='118' fill='%23bbddff' font-size='8.5'%3EBlock: 0x1C2F83 · Timestamp: 2025-04-02%3C/text%3E%3Ctext x='30' y='142' fill='%2300ff88' font-size='9'%3EReceipt: Vote recorded for Candidate B%3C/text%3E%3C/svg%3E" alt="Vote Confirmation">
+        <div class="ss-overlay"><div class="ss-title-ov">Vote Confirmation Receipt</div><span class="ss-tag">↗ On‑chain proof + timestamp</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- C4R2: Conclusions & future work -->
+  <div class="card c4r2">
+    <div class="card-title"><span>💡</span> Conclusions &amp; Outlook</div>
+    <ul class="conc-bullets">
+      <li>Ethereum smart contracts successfully enforce transparent, tamper‑proof voting logic on‑chain.</li>
+      <li>Voter authorisation and double‑voting prevention function correctly across all test scenarios.</li>
+      <li>Usability feedback was highly positive (4.5/5); confirmation latency (~14 s) is the main UX friction.</li>
+    </ul>
+    <div class="limit-box">
+      <div class="limit-title"><i class="fa-solid fa-triangle-exclamation"></i> Limitations</div>
+      <div class="limit-items">Plaintext votes (no privacy) · Gas costs on mainnet (~$0.22/vote) · No ranked‑choice voting</div>
+    </div>
+    <div class="sub-title" style="margin-top:5px;"><i class="fa-solid fa-forward-step"></i> Future Work</div>
+    <ol class="reco-list">
+      <li><div class="reco-num">1</div><span>ZK‑Snarks integration for vote privacy</span></li>
+      <li><div class="reco-num">2</div><span>Layer‑2 deployment (Polygon / Arbitrum)</span></li>
+      <li><div class="reco-num">3</div><span>Batch candidate addition in single transaction</span></li>
+      <li><div class="reco-num">4</div><span>Multi‑signature admin for enhanced security</span></li>
+    </ol>
+  </div>
+</div>
+
+<footer class="footer">
+  <div>
+    <div class="footer-refs-title"><i class="fa-solid fa-book"></i> Key References</div>
+    <div class="ref-item">McCorry, P. et al. (2017) '<em>A Smart Contract for Boardroom Voting</em>'. <em>FC 2017</em>. <span class="doi">DOI: 10.1007/978-3-319-70972-7_20</span></div>
+    <div class="ref-item">Taş, R. &amp; Tanrıöver, Ö.Ö. (2020) '<em>Systematic Review of Blockchain‑Based E‑Voting</em>'. <em>IEEE Access</em>. <span class="doi">DOI: 10.1109/ACCESS.2020.3022078</span></div>
+  </div>
+  <div class="qr-area">
+    <div class="qr-placeholder"><i class="fa-solid fa-qrcode" style="font-size:20px; color:var(--blue);"></i><span>QR<br>demo</span></div>
+    <div class="qr-label">Scan to access GitHub repository &amp; full thesis (demo link).</div>
+  </div>
+  <div class="contact-area">
+    <div class="contact-title"><i class="fa-solid fa-id-card"></i> Contact</div>
+    <div class="contact-line"><i class="fa-solid fa-user"></i> Alex Rivera</div>
+    <div class="contact-line"><i class="fa-solid fa-envelope"></i> alex.rivera@solent.ac.uk</div>
+    <div class="contact-line"><i class="fa-brands fa-github"></i> github.com/decivote-labs</div>
+    <div class="module-badge">QHO634 · BSc (Hons) Computing</div>
+  </div>
+</footer>
+</div>
+</body>
+</html>

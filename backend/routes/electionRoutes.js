@@ -4,7 +4,8 @@ import {
   getElection,
   getCandidates,
   getResults,
-  contract
+  vote,
+  getElectionCount
 } from "../services/blockchainService.js";
 
 const router = express.Router();
@@ -16,6 +17,20 @@ function serializeBigInt(value) {
     )
   );
 }
+
+// Get total election count
+router.get("/count", async (req, res) => {
+  try {
+    const count = await getElectionCount();
+    res.json({
+      success: true,
+      count: parseInt(count.toString())
+    });
+  } catch (error) {
+    console.error("Get election count error:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
 
 // Create a new election
 router.post("/", async (req, res) => {
@@ -31,21 +46,6 @@ router.post("/", async (req, res) => {
     });
   } catch (error) {
     console.error("Create election error:", error);
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// Get election count
-router.get("/count", async (req, res) => {
-  try {
-    const count = await contract.electionCount();
-
-    res.json({
-      success: true,
-      count: count.toString()
-    });
-  } catch (error) {
-    console.error("Get election count error:", error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
@@ -91,6 +91,24 @@ router.get("/:id/results", async (req, res) => {
     });
   } catch (error) {
     console.error("Get results error:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Cast a vote
+router.post("/:id/vote", async (req, res) => {
+  try {
+    const { electionId, candidateId } = req.body;
+
+    const receipt = await vote(electionId, candidateId);
+
+    res.json({
+      success: true,
+      message: "Vote cast successfully",
+      txHash: receipt.hash
+    });
+  } catch (error) {
+    console.error("Vote error:", error);
     res.status(500).json({ success: false, error: error.message });
   }
 });

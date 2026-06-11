@@ -60,6 +60,22 @@ contract DeciVote {
         address indexed voter
     );
 
+    event CandidateDeleted(
+        uint256 indexed electionId,
+        uint256 indexed candidateId
+    );
+
+    event CandidateUpdated(
+        uint256 indexed electionId,
+        uint256 indexed candidateId,
+        string name,
+        string party
+    );
+
+    event ElectionEnded(
+        uint256 indexed electionId
+    );
+
     function createElection(
         string memory _name,
         uint256 _startTime,
@@ -189,6 +205,53 @@ contract DeciVote {
     function endElection(uint256 _electionId) public onlyAdmin {
         require(elections[_electionId].exists, "Election does not exist");
         elections[_electionId].active = false;
+        emit ElectionEnded(_electionId);
+    }
+
+    function deleteCandidate(
+        uint256 _electionId,
+        uint256 _candidateId
+    ) public onlyAdmin {
+        require(elections[_electionId].exists, "Election does not exist");
+        require(
+            _candidateId > 0 &&
+                _candidateId <= electionCandidates[_electionId].length,
+            "Invalid candidate"
+        );
+
+        Candidate[] storage candidates = electionCandidates[_electionId];
+        
+        // Move last candidate to the position being deleted
+        if (_candidateId - 1 != candidates.length - 1) {
+            candidates[_candidateId - 1] = candidates[candidates.length - 1];
+            candidates[_candidateId - 1].id = _candidateId;
+        }
+        
+        candidates.pop();
+        emit CandidateDeleted(_electionId, _candidateId);
+    }
+
+    function updateCandidate(
+        uint256 _electionId,
+        uint256 _candidateId,
+        string memory _name,
+        string memory _party
+    ) public onlyAdmin {
+        require(elections[_electionId].exists, "Election does not exist");
+        require(
+            _candidateId > 0 &&
+                _candidateId <= electionCandidates[_electionId].length,
+            "Invalid candidate"
+        );
+        require(bytes(_name).length > 0, "Candidate name is required");
+
+        Candidate storage candidate = electionCandidates[_electionId][
+            _candidateId - 1
+        ];
+        candidate.name = _name;
+        candidate.party = _party;
+
+        emit CandidateUpdated(_electionId, _candidateId, _name, _party);
     }
 
     function isAuthorizedVoter(

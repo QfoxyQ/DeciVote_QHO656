@@ -1,19 +1,14 @@
-import { network } from "hardhat";
-import dotenv from "dotenv";
-
-dotenv.config();
+import hre from "hardhat";
+import fs from "fs";
 
 async function main() {
-  const { ethers } = await network.connect("ganache");
-
-  const deciVote = await ethers.deployContract("DeciVote");
+  const { ethers } = hre;
+  const DeciVote = await ethers.getContractFactory("DeciVote");
+  const deciVote = await DeciVote.deploy();
   await deciVote.waitForDeployment();
-
   const address = await deciVote.getAddress();
   console.log("DeciVote deployed to:", address);
+  fs.writeFileSync("contract-address.json", JSON.stringify({ address }, null, 2));
 }
 
-main().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+main().catch(console.error);

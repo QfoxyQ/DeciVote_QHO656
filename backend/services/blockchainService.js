@@ -2,19 +2,34 @@ import { ethers } from "ethers";
 import dotenv from "dotenv";
 import fs from "fs";
 import path from "path";
+import { fileURLToPath } from "url";
 
 dotenv.config();
 
-const rpcUrl = process.env.RPC_URL;
-const contractAddress = process.env.CONTRACT_ADDRESS;
+const rpcUrl = process.env.RPC_URL || "http://127.0.0.1:8545";
+let contractAddress = process.env.CONTRACT_ADDRESS;
 const adminPrivateKey = process.env.ADMIN_PRIVATE_KEY;
+
+const projectRoot = process.cwd();
+if (!contractAddress) {
+  const addressPath = path.resolve(projectRoot, "contract-address.json");
+  if (fs.existsSync(addressPath)) {
+    const data = JSON.parse(fs.readFileSync(addressPath, "utf8"));
+    contractAddress = data?.address?.trim();
+  }
+}
+
+if (!contractAddress) {
+  throw new Error("Contract address not found. Set CONTRACT_ADDRESS or create contract-address.json in the project root.");
+}
+if (!adminPrivateKey) {
+  throw new Error("ADMIN_PRIVATE_KEY is not set in .env");
+}
 
 const provider = new ethers.JsonRpcProvider(rpcUrl);
 const wallet = new ethers.Wallet(adminPrivateKey, provider);
 
-const artifactPath = path.resolve(
-  "artifacts/contracts/DeciVote.sol/DeciVote.json"
-);
+const artifactPath = path.resolve(projectRoot, "artifacts/contracts/DeciVote.sol/DeciVote.json");
 
 const artifact = JSON.parse(fs.readFileSync(artifactPath, "utf8"));
 const abi = artifact.abi;
@@ -61,9 +76,30 @@ export async function endElection(electionId) {
   return await tx.wait();
 }
 
-export async function getVoteCastEvents() {
-  const filter = contract.filters.VoteCast();
-  return await contract.queryFilter(filter, 0, "latest");
+export async function deleteCandidate(electionId, candidateId) {
+  const tx = await contract.deleteCandidate(electionId, candidateId);
+  return await tx.wait();
+}
+
+export async function updateCandidate(electionId, candidateId, name, party) {
+  const tx = await contract.updateCandidate(electionId, candidateId, name, party);
+  return await tx.wait();
+}
+
+export async function vote(electionId, candidateId) {
+  const tx = await contract.vote(electionId, candidateId);
+  return await tx.wait();
+}
+
+export async function authorizeVoterBatch(electionId, voterAddresses) {
+  const promises = voterAddresses.map(voterAddress => 
+    authorizeVoter(electionId, voterAddress)
+  );
+  return await Promise.all(promises);
+}
+
+export async function getElectionCount() {
+  return await contract.electionCount();
 }
 
 export { contract, provider };

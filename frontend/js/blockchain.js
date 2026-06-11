@@ -43,3 +43,6 @@ export async function connectWallet() {
 
 export function getContract() { return contract; }
 export function getCurrentAccount() { return currentAccount; }
+
+export function getContract() { return contract; }
+export function getCurrentAccount() { return currentAccount; }

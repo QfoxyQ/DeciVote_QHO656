@@ -399,4 +399,8 @@ function showNotification(message, type) {
     notif.style.animation = "slideOut 0.4s ease-out";
     setTimeout(() => notif.remove(), 400);
   }, 3000);
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 42f8b72 (docs: update dissertation project files)
